@@ -1,1 +1,377 @@
-https://cdn.discordapp.com/attachments/777265355395563553/1495825920651563139/IMG_0239.png?ex=69e8f972&is=69e7a7f2&hm=ddffb8993daf1692e8d89c309895605d7457efbe58dea7df7c398e0eede99f2b
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Quiz - Joueur</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #f8fafc;
+    --muted: #64748b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: url('https://cdn.discordapp.com/attachments/777265355395563553/1495825920651563139/IMG_0239.png?ex=69e8f972&is=69e7a7f2&hm=ddffb8993daf1692e8d89c309895605d7457efbe58dea7df7c398e0eede99f2b') center/cover fixed, var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow-x: hidden;
+  }
+  h1, h2, h3 { font-family: 'Syne', sans-serif; }
+
+  .screen { width: 100%; max-width: 420px; display: none; flex-direction: column; align-items: center; gap: 1.5rem; }
+  .screen.active { display: flex; animation: fadeUp .4s ease; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  .logo { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent2), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  input[type="text"] {
+    width: 100%; padding: 1rem 1.2rem; border-radius: 14px;
+    background: var(--surface2); border: 2px solid transparent;
+    color: var(--text); font-size: 1.1rem; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border .2s;
+  }
+  input:focus { border-color: var(--accent2); }
+
+  .btn {
+    width: 100%; padding: 1rem; border-radius: 14px; border: none;
+    font-size: 1.1rem; font-weight: 600; font-family: 'Syne', sans-serif;
+    cursor: pointer; transition: all .2s; letter-spacing: .02em;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .btn-primary:active { transform: scale(.97); opacity: .9; }
+
+  .waiting-card {
+    background: var(--surface); border-radius: 20px; padding: 2rem;
+    text-align: center; width: 100%;
+    border: 1px solid rgba(124,58,237,.3);
+  }
+  .waiting-card h2 { font-size: 1.4rem; margin-bottom: .5rem; }
+  .waiting-card p { color: var(--muted); }
+  .pulse { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); margin: 1rem auto; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.15);opacity:.7;} }
+
+  .question-card { background: var(--surface); border-radius: 20px; padding: 1.5rem; width: 100%; border: 1px solid rgba(255,255,255,.05); }
+  .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .q-badge { background: var(--accent); padding: .3rem .8rem; border-radius: 100px; font-size: .8rem; font-weight: 600; }
+  .q-index { color: var(--muted); font-size: .9rem; }
+  .q-text { font-size: 1.2rem; font-weight: 600; line-height: 1.4; margin-bottom: 1.5rem; font-family: 'Syne', sans-serif; }
+
+  .choices { display: flex; flex-direction: column; gap: .75rem; width: 100%; }
+  .choice-btn {
+    padding: 1rem 1.2rem; border-radius: 12px; border: 2px solid rgba(255,255,255,.08);
+    background: var(--surface2); color: var(--text); font-size: 1rem;
+    text-align: left; cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .choice-btn:active { transform: scale(.98); }
+  .choice-btn.selected { border-color: var(--accent2); background: rgba(124,58,237,.2); }
+  .choice-btn.correct { border-color: var(--green); background: rgba(16,185,129,.2); }
+  .choice-btn.wrong { border-color: var(--red); background: rgba(239,68,68,.2); }
+
+  .trou-input { display: flex; flex-direction: column; gap: .75rem; width: 100%; }
+  .trou-text { font-size: 1.1rem; line-height: 1.8; color: var(--muted); }
+  .trou-text span { display: inline-block; width: 120px; height: 28px; border-bottom: 2px solid var(--accent2); vertical-align: bottom; }
+
+  .answer-status {
+    padding: 1rem; border-radius: 12px; text-align: center;
+    font-weight: 600; font-size: 1rem;
+  }
+  .answer-status.sent { background: rgba(124,58,237,.2); border: 1px solid var(--accent2); color: var(--accent2); }
+  .answer-status.correct { background: rgba(16,185,129,.2); border: 1px solid var(--green); color: var(--green); }
+  .answer-status.wrong { background: rgba(239,68,68,.2); border: 1px solid var(--red); color: var(--red); }
+
+  .leaderboard { width: 100%; display: flex; flex-direction: column; gap: .75rem; }
+  .lb-item {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--surface); padding: 1rem 1.2rem; border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.05);
+  }
+  .lb-rank { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; width: 30px; }
+  .lb-rank.gold { color: var(--gold); }
+  .lb-rank.silver { color: #94a3b8; }
+  .lb-rank.bronze { color: #b45309; }
+  .lb-name { flex: 1; font-weight: 600; }
+  .lb-score { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent2); }
+
+  .vf-choices { display: flex; gap: 1rem; width: 100%; }
+  .vf-btn {
+    flex: 1; padding: 1.5rem 1rem; border-radius: 14px; border: 2px solid rgba(255,255,255,.08);
+    background: var(--surface2); color: var(--text); font-size: 1.2rem;
+    font-weight: 700; cursor: pointer; transition: all .2s; font-family: 'Syne', sans-serif;
+  }
+  .vf-btn.vrai { border-color: rgba(16,185,129,.4); }
+  .vf-btn.faux { border-color: rgba(239,68,68,.4); }
+  .vf-btn.selected.vrai { background: rgba(16,185,129,.3); border-color: var(--green); }
+  .vf-btn.selected.faux { background: rgba(239,68,68,.3); border-color: var(--red); }
+
+  .video-screen { width: 100%; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden; }
+  .video-screen iframe { width: 100%; height: 100%; border: none; }
+
+  #player-name-display { color: var(--muted); font-size: .9rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- SCREEN: JOIN -->
+<div class="screen active" id="screen-join">
+  <div class="logo">⚡ QuizMaster</div>
+  <p style="color:var(--muted);text-align:center;">Entre ton pseudo pour rejoindre la partie</p>
+  <input type="text" id="pseudo-input" placeholder="Ton pseudo..." maxlength="20" autocomplete="off">
+  <button class="btn btn-primary" onclick="joinGame()">Rejoindre le quiz</button>
+</div>
+
+<!-- SCREEN: WAITING -->
+<div class="screen" id="screen-waiting">
+  <div class="logo">⚡ QuizMaster</div>
+  <div id="player-name-display"></div>
+  <div class="waiting-card">
+    <div class="pulse"></div>
+    <h2>Tu es dans la salle !</h2>
+    <p>En attente du début de la partie...</p>
+    <p style="margin-top:.5rem;font-size:.85rem;" id="player-count"></p>
+  </div>
+</div>
+
+<!-- SCREEN: INTRO VIDEO -->
+<div class="screen" id="screen-intro">
+  <div class="logo">⚡ QuizMaster</div>
+  <div class="video-screen">
+    <iframe id="intro-iframe" allowfullscreen allow="autoplay"></iframe>
+  </div>
+</div>
+
+<!-- SCREEN: QUESTION -->
+<div class="screen" id="screen-question">
+  <div class="question-card">
+    <div class="q-meta">
+      <span class="q-badge" id="q-type-badge">QCM</span>
+      <span class="q-index" id="q-index">Q1/10</span>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div id="q-answer-zone"></div>
+  </div>
+  <div id="answer-status-zone"></div>
+</div>
+
+<!-- SCREEN: LEADERBOARD -->
+<div class="screen" id="screen-leaderboard">
+  <h2 style="font-size:1.6rem;">🏆 Classement</h2>
+  <div class="leaderboard" id="leaderboard-list"></div>
+</div>
+
+<!-- SCREEN: END -->
+<div class="screen" id="screen-end">
+  <div class="logo">🎉 Terminé !</div>
+  <h2 style="text-align:center;">Classement final</h2>
+  <div class="leaderboard" id="final-leaderboard-list"></div>
+</div>
+
+<script>
+let ws, playerId, playerName, currentQuestion, myAnswer = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function connect(name) {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}`);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'player_join', name }));
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    handleMessage(data);
+  };
+
+  ws.onclose = () => {
+    setTimeout(() => { if (playerName) connect(playerName); }, 2000);
+  };
+}
+
+function handleMessage(data) {
+  switch (data.type) {
+    case 'joined':
+      playerId = data.id;
+      showScreen('waiting');
+      document.getElementById('player-name-display').textContent = '👤 ' + playerName;
+      break;
+
+    case 'player_joined':
+      document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
+      break;
+
+    case 'player_left':
+      document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
+      break;
+
+    case 'phase_change':
+      handlePhase(data);
+      break;
+
+    case 'show_answer':
+      showAnswer(data);
+      break;
+  }
+}
+
+function handlePhase(data) {
+  myAnswer = null;
+  switch (data.phase) {
+    case 'waiting':
+      showScreen('waiting');
+      break;
+    case 'intro':
+      showScreen('intro');
+      const url = data.videoUrl || '';
+      document.getElementById('intro-iframe').src = convertYouTubeUrl(url);
+      break;
+    case 'question':
+      currentQuestion = data.question;
+      renderQuestion(data.question, data.index, data.total);
+      showScreen('question');
+      break;
+    case 'leaderboard':
+      renderLeaderboard(data.leaderboard, 'leaderboard-list');
+      showScreen('leaderboard');
+      break;
+    case 'end':
+      renderLeaderboard(data.leaderboard, 'final-leaderboard-list');
+      showScreen('end');
+      break;
+  }
+}
+
+function convertYouTubeUrl(url) {
+  const match = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/);
+  if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1`;
+  return url;
+}
+
+function renderQuestion(q, index, total) {
+  document.getElementById('q-index').textContent = `Q${index+1}/${total}`;
+  document.getElementById('q-text').textContent = q.question;
+  document.getElementById('answer-status-zone').innerHTML = '';
+  const zone = document.getElementById('q-answer-zone');
+  const types = { qcm: 'QCM', vrai_faux: 'Vrai / Faux', texte: 'Réponse libre', trou: 'Texte à trou' };
+  document.getElementById('q-type-badge').textContent = types[q.type] || q.type;
+
+  if (q.type === 'qcm') {
+    zone.innerHTML = `<div class="choices">${q.choices.map((c,i) =>
+      `<button class="choice-btn" onclick="selectChoice(this, '${c.replace(/'/g,"\\'")}')">
+        <span style="color:var(--accent2);font-weight:700;margin-right:.5rem;">${['A','B','C','D'][i]}.</span> ${c}
+      </button>`
+    ).join('')}</div>`;
+  } else if (q.type === 'vrai_faux') {
+    zone.innerHTML = `<div class="vf-choices">
+      <button class="vf-btn vrai" onclick="selectVF(this, 'Vrai')">✅ Vrai</button>
+      <button class="vf-btn faux" onclick="selectVF(this, 'Faux')">❌ Faux</button>
+    </div>`;
+  } else if (q.type === 'texte') {
+    zone.innerHTML = `<div class="trou-input">
+      <input type="text" id="free-answer" placeholder="Ta réponse..." style="width:100%">
+      <button class="btn btn-primary" onclick="submitText()">Envoyer</button>
+    </div>`;
+  } else if (q.type === 'trou') {
+    zone.innerHTML = `<div class="trou-input">
+      <div class="trou-text">${q.question.replace('___', '<span></span>')}</div>
+      <input type="text" id="trou-answer" placeholder="Complète le trou...">
+      <button class="btn btn-primary" onclick="submitTrou()">Envoyer</button>
+    </div>`;
+    document.getElementById('q-text').style.display = 'none';
+  }
+}
+
+function selectChoice(btn, value) {
+  if (myAnswer) return;
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  sendAnswer(value);
+}
+
+function selectVF(btn, value) {
+  if (myAnswer) return;
+  document.querySelectorAll('.vf-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  sendAnswer(value);
+}
+
+function submitText() {
+  if (myAnswer) return;
+  const val = document.getElementById('free-answer').value.trim();
+  if (!val) return;
+  sendAnswer(val);
+}
+
+function submitTrou() {
+  if (myAnswer) return;
+  const val = document.getElementById('trou-answer').value.trim();
+  if (!val) return;
+  sendAnswer(val);
+}
+
+function sendAnswer(answer) {
+  myAnswer = answer;
+  ws.send(JSON.stringify({ type: 'player_answer', answer }));
+  document.getElementById('answer-status-zone').innerHTML =
+    `<div class="answer-status sent">✓ Réponse envoyée ! En attente...</div>`;
+}
+
+function showAnswer(data) {
+  const correct = myAnswer === data.correctAnswer ||
+    myAnswer?.toLowerCase().trim() === data.correctAnswer?.toLowerCase().trim();
+  document.getElementById('answer-status-zone').innerHTML =
+    `<div class="answer-status ${correct ? 'correct' : 'wrong'}">
+      ${correct ? '🎉 Bonne réponse ! +' + (currentQuestion?.points || 100) + ' pts' : `❌ Mauvaise réponse. C'était : ${data.correctAnswer}`}
+    </div>`;
+  if (currentQuestion?.type === 'qcm') {
+    document.querySelectorAll('.choice-btn').forEach(btn => {
+      const txt = btn.textContent.replace(/^[A-D]\. /, '').trim();
+      if (txt === data.correctAnswer) btn.classList.add('correct');
+      else if (btn.classList.contains('selected')) btn.classList.add('wrong');
+    });
+  }
+}
+
+function renderLeaderboard(lb, containerId) {
+  const ranks = ['🥇','🥈','🥉'];
+  const rankClass = ['gold','silver','bronze'];
+  document.getElementById(containerId).innerHTML = lb.map((p, i) =>
+    `<div class="lb-item">
+      <span class="lb-rank ${rankClass[i] || ''}">${ranks[i] || (i+1)}</span>
+      <span class="lb-name">${p.name}</span>
+      <span class="lb-score">${p.score} pts</span>
+    </div>`
+  ).join('');
+}
+
+function joinGame() {
+  const name = document.getElementById('pseudo-input').value.trim();
+  if (!name) return;
+  playerName = name;
+  connect(name);
+}
+
+document.getElementById('pseudo-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinGame();
+});
+</script>
+</body>
+</html>
