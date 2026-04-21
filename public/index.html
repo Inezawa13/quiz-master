@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -36,110 +35,100 @@
   }
   h1, h2, h3 { font-family: 'Syne', sans-serif; }
 
-.screen { width: 100%; max-width: 420px; display: none; flex-direction: column; align-items: center; gap: 1.5rem; }
-.screen.active { display: flex; animation: fadeUp .4s ease; }
-@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .screen { width: 100%; max-width: 420px; display: none; flex-direction: column; align-items: center; gap: 1.5rem; }
+  .screen.active { display: flex; animation: fadeUp .4s ease; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
-.logo { font-family: ‘Syne’, sans-serif; font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(–accent2), var(–gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent2), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-input[type=“text”] {
-width: 100%; padding: 1rem 1.2rem; border-radius: 14px;
-background: var(–surface2); border: 2px solid transparent;
-color: var(–text); font-size: 1.1rem; font-family: ‘DM Sans’, sans-serif;
-outline: none; transition: border .2s;
-}
-input:focus { border-color: var(–accent2); }
+  input[type="text"] {
+    width: 100%; padding: 1rem 1.2rem; border-radius: 14px;
+    background: var(--surface2); border: 2px solid transparent;
+    color: var(--text); font-size: 1.1rem; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border .2s;
+  }
+  input:focus { border-color: var(--accent2); }
 
-.btn {
-width: 100%; padding: 1rem; border-radius: 14px; border: none;
-font-size: 1.1rem; font-weight: 600; font-family: ‘Syne’, sans-serif;
-cursor: pointer; transition: all .2s; letter-spacing: .02em;
-}
-.btn-primary { background: linear-gradient(135deg, var(–accent), var(–accent2)); color: white; }
-.btn-primary:active { transform: scale(.97); opacity: .9; }
+  .btn {
+    width: 100%; padding: 1rem; border-radius: 14px; border: none;
+    font-size: 1.1rem; font-weight: 600; font-family: 'Syne', sans-serif;
+    cursor: pointer; transition: all .2s; letter-spacing: .02em;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .btn-primary:active { transform: scale(.97); opacity: .9; }
 
-.waiting-card {
-background: var(–surface); border-radius: 20px; padding: 2rem;
-text-align: center; width: 100%;
-border: 1px solid rgba(124,58,237,.3);
-}
-.waiting-card h2 { font-size: 1.4rem; margin-bottom: .5rem; }
-.waiting-card p { color: var(–muted); }
-.pulse { width: 60px; height: 60px; border-radius: 50%; background: var(–accent); margin: 1rem auto; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.15);opacity:.7;} }
+  .waiting-card {
+    background: var(--surface); border-radius: 20px; padding: 2rem;
+    text-align: center; width: 100%;
+    border: 1px solid rgba(124,58,237,.3);
+  }
+  .waiting-card h2 { font-size: 1.4rem; margin-bottom: .5rem; }
+  .waiting-card p { color: var(--muted); }
+  .pulse { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); margin: 1rem auto; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.15);opacity:.7;} }
 
-.question-card { background: var(–surface); border-radius: 20px; padding: 1.5rem; width: 100%; border: 1px solid rgba(255,255,255,.05); }
-.q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.q-badge { background: var(–accent); padding: .3rem .8rem; border-radius: 100px; font-size: .8rem; font-weight: 600; }
-.q-index { color: var(–muted); font-size: .9rem; }
-.q-text { font-size: 1.2rem; font-weight: 600; line-height: 1.4; margin-bottom: 1.5rem; font-family: ‘Syne’, sans-serif; }
+  .question-card { background: var(--surface); border-radius: 20px; padding: 1.5rem; width: 100%; border: 1px solid rgba(255,255,255,.05); }
+  .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .q-badge { background: var(--accent); padding: .3rem .8rem; border-radius: 100px; font-size: .8rem; font-weight: 600; }
+  .q-index { color: var(--muted); font-size: .9rem; }
+  .q-text { font-size: 1.2rem; font-weight: 600; line-height: 1.4; margin-bottom: 1.5rem; font-family: 'Syne', sans-serif; }
 
-/* TIMER */
-.timer-wrap { width: 100%; margin-bottom: .75rem; }
-.timer-bar-bg { width: 100%; height: 8px; background: var(–surface2); border-radius: 100px; overflow: hidden; }
-.timer-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(–green), var(–accent2)); transition: width 1s linear, background .5s; }
-.timer-label { display: flex; justify-content: flex-end; font-size: .8rem; color: var(–muted); margin-top: .3rem; font-family: ‘Syne’, sans-serif; font-weight: 700; }
-.timer-label.urgent { color: var(–red); }
+  .choices { display: flex; flex-direction: column; gap: .75rem; width: 100%; }
+  .choice-btn {
+    padding: 1rem 1.2rem; border-radius: 12px; border: 2px solid rgba(255,255,255,.08);
+    background: var(--surface2); color: var(--text); font-size: 1rem;
+    text-align: left; cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .choice-btn:active { transform: scale(.98); }
+  .choice-btn.selected { border-color: var(--accent2); background: rgba(124,58,237,.2); }
+  .choice-btn.correct { border-color: var(--green); background: rgba(16,185,129,.2); }
+  .choice-btn.wrong { border-color: var(--red); background: rgba(239,68,68,.2); }
 
-.choices { display: flex; flex-direction: column; gap: .75rem; width: 100%; }
-.choice-btn {
-padding: 1rem 1.2rem; border-radius: 12px; border: 2px solid rgba(255,255,255,.08);
-background: var(–surface2); color: var(–text); font-size: 1rem;
-text-align: left; cursor: pointer; transition: all .2s; font-family: ‘DM Sans’, sans-serif;
-}
-.choice-btn:active { transform: scale(.98); }
-.choice-btn.selected { border-color: var(–accent2); background: rgba(124,58,237,.2); }
-.choice-btn.correct { border-color: var(–green); background: rgba(16,185,129,.2); }
-.choice-btn.wrong { border-color: var(–red); background: rgba(239,68,68,.2); }
+  .trou-input { display: flex; flex-direction: column; gap: .75rem; width: 100%; }
+  .trou-text { font-size: 1.1rem; line-height: 1.8; color: var(--muted); }
+  .trou-text span { display: inline-block; width: 120px; height: 28px; border-bottom: 2px solid var(--accent2); vertical-align: bottom; }
 
-.trou-input { display: flex; flex-direction: column; gap: .75rem; width: 100%; }
-.trou-text { font-size: 1.1rem; line-height: 1.8; color: var(–muted); }
-.trou-text span { display: inline-block; width: 120px; height: 28px; border-bottom: 2px solid var(–accent2); vertical-align: bottom; }
+  .answer-status {
+    padding: 1rem; border-radius: 12px; text-align: center;
+    font-weight: 600; font-size: 1rem;
+  }
+  .answer-status.sent { background: rgba(124,58,237,.2); border: 1px solid var(--accent2); color: var(--accent2); }
+  .answer-status.correct { background: rgba(16,185,129,.2); border: 1px solid var(--green); color: var(--green); }
+  .answer-status.wrong { background: rgba(239,68,68,.2); border: 1px solid var(--red); color: var(--red); }
 
-.answer-status {
-padding: 1rem; border-radius: 12px; text-align: center;
-font-weight: 600; font-size: 1rem;
-}
-.answer-status.sent { background: rgba(124,58,237,.2); border: 1px solid var(–accent2); color: var(–accent2); }
-.answer-status.correct { background: rgba(16,185,129,.2); border: 1px solid var(–green); color: var(–green); }
-.answer-status.wrong { background: rgba(239,68,68,.2); border: 1px solid var(–red); color: var(–red); }
-.answer-status.timeout { background: rgba(239,68,68,.15); border: 1px solid var(–red); color: var(–red); }
+  .leaderboard { width: 100%; display: flex; flex-direction: column; gap: .75rem; }
+  .lb-item {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--surface); padding: 1rem 1.2rem; border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.05);
+  }
+  .lb-rank { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; width: 30px; }
+  .lb-rank.gold { color: var(--gold); }
+  .lb-rank.silver { color: #94a3b8; }
+  .lb-rank.bronze { color: #b45309; }
+  .lb-name { flex: 1; font-weight: 600; }
+  .lb-score { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent2); }
 
-.leaderboard { width: 100%; display: flex; flex-direction: column; gap: .75rem; }
-.lb-item {
-display: flex; align-items: center; gap: 1rem;
-background: var(–surface); padding: 1rem 1.2rem; border-radius: 14px;
-border: 1px solid rgba(255,255,255,.05);
-}
-.lb-rank { font-family: ‘Syne’, sans-serif; font-size: 1.2rem; font-weight: 800; width: 30px; }
-.lb-rank.gold { color: var(–gold); }
-.lb-rank.silver { color: #94a3b8; }
-.lb-rank.bronze { color: #b45309; }
-.lb-name { flex: 1; font-weight: 600; }
-.lb-score { font-family: ‘Syne’, sans-serif; font-weight: 700; color: var(–accent2); }
+  .vf-choices { display: flex; gap: 1rem; width: 100%; }
+  .vf-btn {
+    flex: 1; padding: 1.5rem 1rem; border-radius: 14px; border: 2px solid rgba(255,255,255,.08);
+    background: var(--surface2); color: var(--text); font-size: 1.2rem;
+    font-weight: 700; cursor: pointer; transition: all .2s; font-family: 'Syne', sans-serif;
+  }
+  .vf-btn.vrai { border-color: rgba(16,185,129,.4); }
+  .vf-btn.faux { border-color: rgba(239,68,68,.4); }
+  .vf-btn.selected.vrai { background: rgba(16,185,129,.3); border-color: var(--green); }
+  .vf-btn.selected.faux { background: rgba(239,68,68,.3); border-color: var(--red); }
 
-.vf-choices { display: flex; gap: 1rem; width: 100%; }
-.vf-btn {
-flex: 1; padding: 1.5rem 1rem; border-radius: 14px; border: 2px solid rgba(255,255,255,.08);
-background: var(–surface2); color: var(–text); font-size: 1.2rem;
-font-weight: 700; cursor: pointer; transition: all .2s; font-family: ‘Syne’, sans-serif;
-}
-.vf-btn.vrai { border-color: rgba(16,185,129,.4); }
-.vf-btn.faux { border-color: rgba(239,68,68,.4); }
-.vf-btn.selected.vrai { background: rgba(16,185,129,.3); border-color: var(–green); }
-.vf-btn.selected.faux { background: rgba(239,68,68,.3); border-color: var(–red); }
+  .video-screen { width: 100%; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden; }
+  .video-screen iframe { width: 100%; height: 100%; border: none; }
 
-.video-screen { width: 100%; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden; }
-.video-screen iframe { width: 100%; height: 100%; border: none; }
-
-#player-name-display { color: var(–muted); font-size: .9rem; text-align: center; }
+  #player-name-display { color: var(--muted); font-size: .9rem; text-align: center; }
 </style>
-
 </head>
 <body>
 
 <!-- SCREEN: JOIN -->
-
 <div class="screen active" id="screen-join">
   <div class="logo">⚡ Question Pour Un Imperien</div>
   <p style="color:var(--muted);text-align:center;">Entre ton pseudo pour rejoindre la partie</p>
@@ -148,7 +137,6 @@ font-weight: 700; cursor: pointer; transition: all .2s; font-family: ‘Syne’,
 </div>
 
 <!-- SCREEN: WAITING -->
-
 <div class="screen" id="screen-waiting">
   <div class="logo">⚡Question Pour Un Imperien</div>
   <div id="player-name-display"></div>
@@ -161,7 +149,6 @@ font-weight: 700; cursor: pointer; transition: all .2s; font-family: ‘Syne’,
 </div>
 
 <!-- SCREEN: INTRO VIDEO -->
-
 <div class="screen" id="screen-intro">
   <div class="logo">⚡Question Pour Un Imperien </div>
   <div class="video-screen">
@@ -170,19 +157,11 @@ font-weight: 700; cursor: pointer; transition: all .2s; font-family: ‘Syne’,
 </div>
 
 <!-- SCREEN: QUESTION -->
-
 <div class="screen" id="screen-question">
   <div class="question-card">
     <div class="q-meta">
       <span class="q-badge" id="q-type-badge">QCM</span>
       <span class="q-index" id="q-index">Q1/10</span>
-    </div>
-    <!-- TIMER -->
-    <div class="timer-wrap">
-      <div class="timer-bar-bg">
-        <div class="timer-bar" id="timer-bar"></div>
-      </div>
-      <div class="timer-label" id="timer-label">45s</div>
     </div>
     <div class="q-text" id="q-text"></div>
     <div id="q-answer-zone"></div>
@@ -191,14 +170,12 @@ font-weight: 700; cursor: pointer; transition: all .2s; font-family: ‘Syne’,
 </div>
 
 <!-- SCREEN: LEADERBOARD -->
-
 <div class="screen" id="screen-leaderboard">
   <h2 style="font-size:1.6rem;">🏆 Classement</h2>
   <div class="leaderboard" id="leaderboard-list"></div>
 </div>
 
 <!-- SCREEN: END -->
-
 <div class="screen" id="screen-end">
   <div class="logo">🎉 Terminé !</div>
   <h2 style="text-align:center;">Classement final</h2>
@@ -207,76 +184,7 @@ font-weight: 700; cursor: pointer; transition: all .2s; font-family: ‘Syne’,
 
 <script>
 let ws, playerId, playerName, currentQuestion, myAnswer = null;
-let timerInterval = null;
-const TIMER_DURATION = 45;
 
-// --- BUZZER SOUND (Web Audio API) ---
-function playBuzzer() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Buzzer : 3 bips descendants rapides
-    const times = [0, 0.12, 0.24];
-    const freqs = [880, 660, 440];
-
-    times.forEach((t, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freqs[i], ctx.currentTime + t);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + t);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.1);
-      osc.start(ctx.currentTime + t);
-      osc.stop(ctx.currentTime + t + 0.11);
-    });
-  } catch(e) {}
-}
-
-// --- TIMER ---
-function startTimer() {
-  clearInterval(timerInterval);
-  let remaining = TIMER_DURATION;
-  const bar = document.getElementById('timer-bar');
-  const label = document.getElementById('timer-label');
-
-  bar.style.width = '100%';
-  bar.style.background = 'linear-gradient(90deg, #10b981, #a855f7)';
-  label.textContent = remaining + 's';
-  label.className = 'timer-label';
-
-  timerInterval = setInterval(() => {
-    remaining--;
-    const pct = (remaining / TIMER_DURATION) * 100;
-    bar.style.width = pct + '%';
-    label.textContent = remaining + 's';
-
-    if (remaining <= 10) {
-      bar.style.background = 'linear-gradient(90deg, #ef4444, #f59e0b)';
-      label.className = 'timer-label urgent';
-    }
-
-    if (remaining <= 0) {
-      clearInterval(timerInterval);
-      bar.style.width = '0%';
-      label.textContent = '0s';
-      if (!myAnswer) {
-        myAnswer = '__timeout__';
-        document.getElementById('answer-status-zone').innerHTML =
-          `<div class="answer-status timeout">⏰ Temps écoulé !</div>`;
-        // Désactiver les boutons
-        document.querySelectorAll('.choice-btn, .vf-btn').forEach(b => b.style.pointerEvents = 'none');
-      }
-    }
-  }, 1000);
-}
-
-function stopTimer() {
-  clearInterval(timerInterval);
-}
-
-// --- SCREENS ---
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
@@ -285,9 +193,19 @@ function showScreen(id) {
 function connect(name) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(`${protocol}//${location.host}`);
-  ws.onopen = () => ws.send(JSON.stringify({ type: 'player_join', name }));
-  ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
-  ws.onclose = () => setTimeout(() => { if (playerName) connect(playerName); }, 2000);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'player_join', name }));
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    handleMessage(data);
+  };
+
+  ws.onclose = () => {
+    setTimeout(() => { if (playerName) connect(playerName); }, 2000);
+  };
 }
 
 function handleMessage(data) {
@@ -297,17 +215,20 @@ function handleMessage(data) {
       showScreen('waiting');
       document.getElementById('player-name-display').textContent = '👤 ' + playerName;
       break;
+
     case 'player_joined':
       document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
       break;
+
     case 'player_left':
       document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
       break;
+
     case 'phase_change':
       handlePhase(data);
       break;
+
     case 'show_answer':
-      stopTimer();
       showAnswer(data);
       break;
   }
@@ -315,21 +236,19 @@ function handleMessage(data) {
 
 function handlePhase(data) {
   myAnswer = null;
-  stopTimer();
   switch (data.phase) {
     case 'waiting':
       showScreen('waiting');
       break;
     case 'intro':
       showScreen('intro');
-      document.getElementById('intro-iframe').src = convertYouTubeUrl(data.videoUrl || '');
+      const url = data.videoUrl || '';
+      document.getElementById('intro-iframe').src = convertYouTubeUrl(url);
       break;
     case 'question':
       currentQuestion = data.question;
       renderQuestion(data.question, data.index, data.total);
       showScreen('question');
-      playBuzzer();
-      startTimer();
       break;
     case 'leaderboard':
       renderLeaderboard(data.leaderboard, 'leaderboard-list');
@@ -412,7 +331,6 @@ function submitTrou() {
 
 function sendAnswer(answer) {
   myAnswer = answer;
-  stopTimer();
   ws.send(JSON.stringify({ type: 'player_answer', answer }));
   document.getElementById('answer-status-zone').innerHTML =
     `<div class="answer-status sent">✓ Réponse envoyée ! En attente...</div>`;
@@ -421,12 +339,9 @@ function sendAnswer(answer) {
 function showAnswer(data) {
   const correct = myAnswer === data.correctAnswer ||
     myAnswer?.toLowerCase().trim() === data.correctAnswer?.toLowerCase().trim();
-  const timedOut = myAnswer === '__timeout__';
   document.getElementById('answer-status-zone').innerHTML =
-    `<div class="answer-status ${timedOut ? 'timeout' : correct ? 'correct' : 'wrong'}">
-      ${timedOut ? `⏰ Temps écoulé ! C'était : ${data.correctAnswer}` :
-        correct ? '🎉 Bonne réponse ! +' + (currentQuestion?.points || 100) + ' pts' :
-        `❌ Mauvaise réponse. C'était : ${data.correctAnswer}`}
+    `<div class="answer-status ${correct ? 'correct' : 'wrong'}">
+      ${correct ? '🎉 Bonne réponse ! +' + (currentQuestion?.points || 100) + ' pts' : `❌ Mauvaise réponse. C'était : ${data.correctAnswer}`}
     </div>`;
   if (currentQuestion?.type === 'qcm') {
     document.querySelectorAll('.choice-btn').forEach(btn => {
@@ -460,6 +375,5 @@ document.getElementById('pseudo-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') joinGame();
 });
 </script>
-
 </body>
 </html>
