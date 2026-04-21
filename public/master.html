@@ -135,7 +135,7 @@
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="logo">⚡ QuizMaster</div>
+    <div class="logo">⚔️ Question pour un Impérien</div>
     <p>Panel Maître — Accès sécurisé</p>
     <div style="display:flex;flex-direction:column;gap:.75rem;">
       <input type="password" id="pwd-input" placeholder="Mot de passe maître..." onkeydown="if(event.key==='Enter')auth()">
@@ -148,7 +148,7 @@
 <!-- MAIN -->
 <div id="main-screen">
   <div class="topbar">
-    <span class="logo-sm">⚡ QuizMaster — Panel Maître</span>
+    <span class="logo-sm">⚔️ Question pour un Impérien — Panel Maître</span>
     <div style="display:flex;align-items:center;gap:1rem;">
       <span id="phase-pill" class="status-pill status-waiting">EN ATTENTE</span>
       <button class="btn btn-ghost btn-sm" onclick="resetGame()">🔄 Reset</button>
@@ -558,6 +558,7 @@ function saveQuestion() {
   } else {
     questions.push(q);
   }
+
   closeModal();
   renderQuestions();
   saveQuestions();
