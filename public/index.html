@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Quiz - Joueur</title>
+<title>Question pour un Impérien</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -20,9 +20,7 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    background:
-      linear-gradient(rgba(10,10,15,0.6), rgba(10,10,15,0.6)),
-      url('https://i.ibb.co/0VzsRPTS/imp.webp') center/cover fixed;
+    background: url('https://cdn.discordapp.com/attachments/777265355395563553/1495825920651563139/IMG_0239.png?ex=69e8f972&is=69e7a7f2&hm=ddffb8993daf1692e8d89c309895605d7457efbe58dea7df7c398e0eede99f2b') center/cover fixed, var(--bg);
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     min-height: 100dvh;
@@ -124,13 +122,42 @@
   .video-screen iframe { width: 100%; height: 100%; border: none; }
 
   #player-name-display { color: var(--muted); font-size: .9rem; text-align: center; }
+
+  /* TIMER */
+  .timer-wrapper {
+    width: 100%; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  }
+  .timer-bar-bg {
+    width: 100%; height: 8px; background: var(--surface2); border-radius: 100px; overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 1s linear, background .5s;
+  }
+  .timer-bar.danger { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .timer-text {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem;
+    transition: color .3s;
+  }
+  .timer-text.danger { color: var(--red); animation: shake .3s infinite; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+  .timer-expired {
+    font-size: 1rem; color: var(--red); font-weight: 700; text-align: center;
+    padding: .75rem; background: rgba(239,68,68,.1); border-radius: 10px;
+    border: 1px solid rgba(239,68,68,.3); width: 100%;
+  }
 </style>
 </head>
 <body>
 
 <!-- SCREEN: JOIN -->
 <div class="screen active" id="screen-join">
-  <div class="logo">⚡ Question Pour Un Imperien</div>
+  <div class="logo">⚔️ Question pour un Impérien</div>
   <p style="color:var(--muted);text-align:center;">Entre ton pseudo pour rejoindre la partie</p>
   <input type="text" id="pseudo-input" placeholder="Ton pseudo..." maxlength="20" autocomplete="off">
   <button class="btn btn-primary" onclick="joinGame()">Rejoindre le quiz</button>
@@ -138,7 +165,7 @@
 
 <!-- SCREEN: WAITING -->
 <div class="screen" id="screen-waiting">
-  <div class="logo">⚡Question Pour Un Imperien</div>
+  <div class="logo">⚔️ Question pour un Impérien</div>
   <div id="player-name-display"></div>
   <div class="waiting-card">
     <div class="pulse"></div>
@@ -150,7 +177,7 @@
 
 <!-- SCREEN: INTRO VIDEO -->
 <div class="screen" id="screen-intro">
-  <div class="logo">⚡Question Pour Un Imperien </div>
+  <div class="logo">⚔️ Question pour un Impérien</div>
   <div class="video-screen">
     <iframe id="intro-iframe" allowfullscreen allow="autoplay"></iframe>
   </div>
@@ -158,6 +185,12 @@
 
 <!-- SCREEN: QUESTION -->
 <div class="screen" id="screen-question">
+  <div class="timer-wrapper" id="timer-wrapper">
+    <div class="timer-text" id="timer-text">45</div>
+    <div class="timer-bar-bg">
+      <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+    </div>
+  </div>
   <div class="question-card">
     <div class="q-meta">
       <span class="q-badge" id="q-type-badge">QCM</span>
@@ -184,6 +217,85 @@
 
 <script>
 let ws, playerId, playerName, currentQuestion, myAnswer = null;
+let timerInterval = null;
+let timerSeconds = 45;
+const TIMER_DURATION = 45;
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.5, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.8);
+  } catch(e) {}
+}
+
+function playUrgentBeeps() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.3, 0.6].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(660, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.2);
+    });
+  } catch(e) {}
+}
+
+function startTimer() {
+  stopTimer();
+  timerSeconds = TIMER_DURATION;
+  updateTimerUI(timerSeconds);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerUI(timerSeconds);
+    if (timerSeconds === 10) playUrgentBeeps();
+    if (timerSeconds === 5) playUrgentBeeps();
+    if (timerSeconds <= 0) {
+      stopTimer();
+      playBeep();
+      document.getElementById('timer-text').textContent = '⏰';
+      document.getElementById('timer-bar').style.width = '0%';
+      if (!myAnswer) {
+        document.getElementById('answer-status-zone').innerHTML =
+          `<div class="timer-expired">⏰ Temps écoulé ! En attente du maître...</div>`;
+      }
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerUI(seconds) {
+  const text = document.getElementById('timer-text');
+  const bar = document.getElementById('timer-bar');
+  if (!text || !bar) return;
+  const pct = Math.max(0, (seconds / TIMER_DURATION) * 100);
+  text.textContent = Math.max(0, seconds);
+  bar.style.width = pct + '%';
+  if (seconds <= 10) {
+    text.classList.add('danger');
+    bar.classList.add('danger');
+  } else {
+    text.classList.remove('danger');
+    bar.classList.remove('danger');
+  }
+}
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -193,19 +305,9 @@ function showScreen(id) {
 function connect(name) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   ws = new WebSocket(`${protocol}//${location.host}`);
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'player_join', name }));
-  };
-
-  ws.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    handleMessage(data);
-  };
-
-  ws.onclose = () => {
-    setTimeout(() => { if (playerName) connect(playerName); }, 2000);
-  };
+  ws.onopen = () => ws.send(JSON.stringify({ type: 'player_join', name }));
+  ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
+  ws.onclose = () => setTimeout(() => { if (playerName) connect(playerName); }, 2000);
 }
 
 function handleMessage(data) {
@@ -215,20 +317,17 @@ function handleMessage(data) {
       showScreen('waiting');
       document.getElementById('player-name-display').textContent = '👤 ' + playerName;
       break;
-
     case 'player_joined':
       document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
       break;
-
     case 'player_left':
       document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
       break;
-
     case 'phase_change':
       handlePhase(data);
       break;
-
     case 'show_answer':
+      stopTimer();
       showAnswer(data);
       break;
   }
@@ -236,19 +335,20 @@ function handleMessage(data) {
 
 function handlePhase(data) {
   myAnswer = null;
+  stopTimer();
   switch (data.phase) {
     case 'waiting':
       showScreen('waiting');
       break;
     case 'intro':
       showScreen('intro');
-      const url = data.videoUrl || '';
-      document.getElementById('intro-iframe').src = convertYouTubeUrl(url);
+      document.getElementById('intro-iframe').src = convertYouTubeUrl(data.videoUrl || '');
       break;
     case 'question':
       currentQuestion = data.question;
       renderQuestion(data.question, data.index, data.total);
       showScreen('question');
+      startTimer();
       break;
     case 'leaderboard':
       renderLeaderboard(data.leaderboard, 'leaderboard-list');
@@ -331,6 +431,7 @@ function submitTrou() {
 
 function sendAnswer(answer) {
   myAnswer = answer;
+  stopTimer();
   ws.send(JSON.stringify({ type: 'player_answer', answer }));
   document.getElementById('answer-status-zone').innerHTML =
     `<div class="answer-status sent">✓ Réponse envoyée ! En attente...</div>`;
