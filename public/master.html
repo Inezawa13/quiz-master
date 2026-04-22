@@ -1,109 +1,122 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Master Panel — Détection Chevaliers</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #080810; --gold: #f59e0b; --accent: #7c3aed; }
-        body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns: 300px 1fr; height:100vh; }
-        
-        /* Sidebar avec liste des joueurs bien visible */
-        .sidebar { background:#10101a; border-right:2px solid var(--accent); padding:20px; display:flex; flex-direction:column; }
-        .player-card { background:#1a1a2e; border:1px solid #333; padding:10px; margin-bottom:8px; border-radius:8px; color:var(--gold); font-weight:bold; animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
-        .main { padding:30px; }
-        .status-badge { display:inline-block; padding:5px 12px; border-radius:20px; font-size:0.8rem; margin-bottom:20px; border:1px solid #333; }
-        .online { color:#10b981; border-color:#10b981; }
-        
-        .btn { padding:12px 24px; border-radius:10px; border:none; font-weight:bold; cursor:pointer; color:white; font-family:'Syne'; }
-        .btn-start { background:var(--accent); }
-    </style>
+<meta charset="UTF-8">
+<title>Sanctuaire — Master Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #080810; --surface: #10101a; --accent: #7c3aed; --gold: #f59e0b; }
+  body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns: 280px 1fr; height:100vh; overflow: hidden; }
+  
+  .sidebar { background:var(--surface); border-right:1px solid #333; padding:20px; display:flex; flex-direction:column; gap:20px; }
+  .main { padding:25px; overflow-y:auto; }
+  
+  .panel { background:#161625; border-radius:12px; padding:15px; border:1px solid #333; }
+  .btn { padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-family:'Syne'; color:white; }
+  .btn-primary { background:var(--accent); }
+  .btn-gold { background:var(--gold); color:black; }
+  
+  .round-tab { padding:10px; border-radius:8px; border:1px solid #333; margin-bottom:5px; cursor:pointer; font-size:0.8rem; text-align:center; }
+  .round-tab.active { border-color:var(--gold); color:var(--gold); background:rgba(245,158,11,0.1); }
+  
+  .player-tag { display:block; padding:8px; background:#080810; border-radius:6px; margin-bottom:5px; color:var(--gold); font-size:0.85rem; border-left:3px solid var(--gold); }
+  input { width:100%; padding:10px; margin-bottom:8px; background:#080810; border:1px solid #333; color:white; border-radius:5px; }
+</style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2 style="font-family:'Syne'; color:var(--gold); margin-top:0;">👥 PRÉSENTS (<span id="count">0</span>)</h2>
-    <div id="player-list">
-        <p style="color:#64748b; font-size:0.9rem;">En attente de connexion...</p>
+    <h3 style="font-family:'Syne'; color:var(--gold); margin:0;">👥 CHEVALIERS (<span id="count">0</span>)</h3>
+    <div id="player-list" style="flex:1; overflow-y:auto;"></div>
+    
+    <div class="panel">
+        <h4 style="margin:0 0 10px 0; font-size:0.8rem;">🏆 TOP 5 SECRET</h4>
+        <div id="scores-list" style="font-size:0.8rem; margin-bottom:10px;"></div>
+        <button class="btn btn-primary" style="width:100%; font-size:0.7rem;" onclick="updateLeaderboard()">CALCULER FINALISTES</button>
     </div>
 </div>
 
 <div class="main">
-    <div id="status" class="status-badge">🔴 DÉCONNECTÉ DU SERVEUR</div>
-    
-    <h1 style="font-family:'Syne'; margin-bottom:10px;">CONTRÔLE DU TOURNOI</h1>
-    <p style="color:#64748b; margin-bottom:30px;">Vérifie que tous tes chevaliers sont dans la liste à gauche avant de lancer.</p>
+    <div style="display:flex; gap:10px; margin-bottom:30px;">
+        <button class="btn btn-primary" onclick="startGame()">🚀 START GAME</button>
+        <button class="btn" style="background:#3b82f6" onclick="togglePause()">☕ PAUSE PIPI</button>
+        <button class="btn btn-gold" onclick="nextQuestion()">⏭ QUESTION SUIVANTE</button>
+    </div>
 
-    <button class="btn btn-start" onclick="startGame()">🚀 LANCER LE JEU POUR TOUS</button>
-    
-    <div style="margin-top:50px; padding:20px; background:#161625; border-radius:15px; border:1px dashed #444;">
-        <h3 style="color:var(--gold)">Aide au dépannage :</h3>
-        <ul style="font-size:0.9rem; color:#94a3b8; line-height:1.6;">
-            <li>1. Ouvre ta page Joueur sur ton téléphone.</li>
-            <li>2. Entre un pseudo et valide.</li>
-            <li>3. Si le nom n'apparaît pas à gauche, rafraîchis cette page (Master).</li>
-        </ul>
+    <div id="rounds-container" style="display:flex; gap:10px; margin-bottom:20px;"></div>
+
+    <div style="display:grid; grid-template-columns: 1fr 300px; gap:20px;">
+        <div>
+            <h2 id="current-round-name" style="font-family:'Syne'; color:var(--gold);">Chargement...</h2>
+            <div id="questions-list" style="margin-top:20px;"></div>
+        </div>
+        
+        <div class="panel">
+            <h3 style="font-family:'Syne'; font-size:0.9rem; color:var(--gold);">➕ AJOUTER QUESTION</h3>
+            <input type="text" id="q-txt" placeholder="Question...">
+            <input type="text" id="r1" placeholder="Bonne réponse">
+            <input type="text" id="r2" placeholder="Fausse 1">
+            <input type="text" id="r3" placeholder="Fausse 2">
+            <input type="text" id="r4" placeholder="Fausse 3">
+            <button class="btn btn-gold" style="width:100%" onclick="addAndSend()">ENVOYER DIRECTEMENT</button>
+        </div>
     </div>
 </div>
 
 <script>
     let ws;
-    let players = new Set(); // Pour éviter les doublons
+    let activeRound = 0;
+    let players = new Set();
+    let scores = {};
+    const rounds = ["L'Éveil de Seiya", "La Fureur d'Ikki", "Le Jugement de Saga", "La Malédiction d'Hadès", "Le Cosmos d'Athéna"];
 
     function connect() {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         ws = new WebSocket(`${protocol}//${location.host}`);
-
-        ws.onopen = () => {
-            document.getElementById('status').textContent = "🟢 SERVEUR CONNECTÉ";
-            document.getElementById('status').className = "status-badge online";
-            // On demande la liste dès la connexion
-            ws.send(JSON.stringify({ type: 'get_players' }));
-        };
-
         ws.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            console.log("Reçu du serveur:", data); // Pour debug dans la console
-
-            // CAS 1 : Le serveur envoie une liste complète
-            if (data.type === 'player_list') {
-                data.players.forEach(p => players.add(p.name));
-                updateUI();
+            if (data.type === 'player_list') { data.players.forEach(p => players.add(p.name)); }
+            if (data.type === 'new_player' || data.type === 'join') { players.add(data.name || data.playerName); }
+            if (data.type === 'answer_update') {
+                if(!scores[data.playerName]) scores[data.playerName] = 0;
+                scores[data.playerName] += 1;
             }
-
-            // CAS 2 : Un nouveau joueur vient de se connecter
-            if (data.type === 'new_player' || data.type === 'join') {
-                players.add(data.name || data.playerName);
-                updateUI();
-            }
+            updateUI();
         };
+        renderTabs();
+    }
 
-        ws.onclose = () => {
-            document.getElementById('status').textContent = "🔴 CONNEXION PERDUE";
-            document.getElementById('status').className = "status-badge";
-            setTimeout(connect, 2000); // Reconnexion automatique
-        };
+    function renderTabs() {
+        document.getElementById('rounds-container').innerHTML = rounds.map((r, i) => `
+            <div class="round-tab ${i === activeRound ? 'active' : ''}" onclick="activeRound=${i}; renderTabs();">${r}</div>
+        `).join('');
+        document.getElementById('current-round-name').textContent = rounds[activeRound];
     }
 
     function updateUI() {
-        const listDiv = document.getElementById('player-list');
-        const countSpan = document.getElementById('count');
-        
-        if (players.size === 0) {
-            listDiv.innerHTML = "<p style='color:#64748b;'>Aucun joueur...</p>";
-        } else {
-            listDiv.innerHTML = Array.from(players).map(name => `
-                <div class="player-card">🛡️ ${name}</div>
-            `).join('');
-        }
-        countSpan.textContent = players.size;
+        document.getElementById('count').textContent = players.size;
+        document.getElementById('player-list').innerHTML = Array.from(players).map(p => `<div class="player-tag">🛡️ ${p}</div>`).join('');
     }
 
-    function startGame() {
-        ws.send(JSON.stringify({ type: 'master_start_game' }));
+    function updateLeaderboard() {
+        const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]).slice(0,5);
+        document.getElementById('scores-list').innerHTML = sorted.map(([n,s]) => `<div>${n}: ${s} pts</div>`).join('');
     }
+
+    function addAndSend() {
+        const q = {
+            text: document.getElementById('q-txt').value,
+            options: [document.getElementById('r1').value, document.getElementById('r2').value, document.getElementById('r3').value, document.getElementById('r4').value]
+        };
+        ws.send(JSON.stringify({ type: 'admin_add_question', question: q }));
+        const div = document.createElement('div');
+        div.innerHTML = `<div style="background:#222; padding:10px; border-radius:5px; margin-bottom:5px;">✅ ${q.text}</div>`;
+        document.getElementById('questions-list').prepend(div);
+    }
+
+    function togglePause() { ws.send(JSON.stringify({ type: 'master_pause_on' })); alert("Jeu en pause !"); }
+    function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
+    function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
 
     connect();
 </script>
