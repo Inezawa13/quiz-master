@@ -6,59 +6,63 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #080810; --surface: #10101a; --accent: #7c3aed; --gold: #f59e0b; }
-  body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns: 280px 1fr; height:100vh; overflow: hidden; }
+  body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns: 300px 1fr; height:100vh; overflow: hidden; }
   
-  .sidebar { background:var(--surface); border-right:1px solid #333; padding:20px; display:flex; flex-direction:column; gap:20px; }
+  .sidebar { background:var(--surface); border-right:2px solid var(--accent); padding:20px; display:flex; flex-direction:column; gap:20px; }
   .main { padding:25px; overflow-y:auto; }
   
   .panel { background:#161625; border-radius:12px; padding:15px; border:1px solid #333; }
-  .btn { padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-family:'Syne'; color:white; }
+  .btn { padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-family:'Syne'; color:white; transition: 0.2s; }
+  .btn:hover { transform: translateY(-2px); opacity: 0.9; }
   .btn-primary { background:var(--accent); }
   .btn-gold { background:var(--gold); color:black; }
   
-  .round-tab { padding:10px; border-radius:8px; border:1px solid #333; margin-bottom:5px; cursor:pointer; font-size:0.8rem; text-align:center; }
-  .round-tab.active { border-color:var(--gold); color:var(--gold); background:rgba(245,158,11,0.1); }
+  .round-tab { padding:12px; border-radius:8px; border:1px solid #333; margin-bottom:8px; cursor:pointer; font-size:0.85rem; text-align:center; font-weight: bold; }
+  .round-tab.active { border: 2px solid var(--gold); color:var(--gold); background:rgba(245,158,11,0.1); }
   
-  .player-tag { display:block; padding:8px; background:#080810; border-radius:6px; margin-bottom:5px; color:var(--gold); font-size:0.85rem; border-left:3px solid var(--gold); }
-  input { width:100%; padding:10px; margin-bottom:8px; background:#080810; border:1px solid #333; color:white; border-radius:5px; }
+  .player-tag { display:block; padding:10px; background:#05050a; border-radius:8px; margin-bottom:8px; color:var(--gold); font-size:0.9rem; border-left:4px solid var(--gold); font-weight: bold; }
+  input { width:100%; padding:12px; margin-bottom:10px; background:#05050a; border:1px solid #333; color:white; border-radius:8px; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h3 style="font-family:'Syne'; color:var(--gold); margin:0;">👥 CHEVALIERS (<span id="count">0</span>)</h3>
-    <div id="player-list" style="flex:1; overflow-y:auto;"></div>
+    <h3 style="font-family:'Syne'; color:var(--gold); margin:0; text-transform: uppercase; letter-spacing: 1px;">🛡️ CHEVALIERS (<span id="count">0</span>)</h3>
+    <div id="player-list" style="flex:1; overflow-y:auto; margin-top: 15px;"></div>
     
-    <div class="panel">
-        <h4 style="margin:0 0 10px 0; font-size:0.8rem;">🏆 TOP 5 SECRET</h4>
-        <div id="scores-list" style="font-size:0.8rem; margin-bottom:10px;"></div>
-        <button class="btn btn-primary" style="width:100%; font-size:0.7rem;" onclick="updateLeaderboard()">CALCULER FINALISTES</button>
+    <div class="panel" style="border-color: var(--accent);">
+        <h4 style="margin:0 0 10px 0; font-size:0.8rem; text-transform: uppercase;">🏆 TOP 5 SECRET</h4>
+        <div id="scores-list" style="font-size:0.9rem; margin-bottom:15px; color: var(--gold);"></div>
+        <button class="btn btn-primary" style="width:100%; font-size:0.75rem;" onclick="updateLeaderboard()">CALCULER LE CLASSEMENT</button>
     </div>
 </div>
 
 <div class="main">
-    <div style="display:flex; gap:10px; margin-bottom:30px;">
-        <button class="btn btn-primary" onclick="startGame()">🚀 START GAME</button>
-        <button class="btn" style="background:#3b82f6" onclick="togglePause()">☕ PAUSE PIPI</button>
-        <button class="btn btn-gold" onclick="nextQuestion()">⏭ QUESTION SUIVANTE</button>
+    <div style="display:flex; gap:15px; margin-bottom:30px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="sendToWs('master_start_game')">🚀 LANCER LE JEU</button>
+        <button class="btn" style="background:#3b82f6; flex:1;" onclick="sendToWs('master_pause_on')">☕ PAUSE PIPI</button>
+        <button class="btn btn-gold" style="flex:1;" onclick="sendToWs('master_next_question')">⏭ QUESTION SUIVANTE</button>
     </div>
 
-    <div id="rounds-container" style="display:flex; gap:10px; margin-bottom:20px;"></div>
+    <h3 style="font-family:'Syne'; color:var(--gold); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Choix de la Manche :</h3>
+    <div id="rounds-container" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:30px;"></div>
 
-    <div style="display:grid; grid-template-columns: 1fr 300px; gap:20px;">
+    <div style="display:grid; grid-template-columns: 1fr 350px; gap:25px;">
         <div>
-            <h2 id="current-round-name" style="font-family:'Syne'; color:var(--gold);">Chargement...</h2>
-            <div id="questions-list" style="margin-top:20px;"></div>
+            <h2 id="current-round-name" style="font-family:'Syne'; color:var(--gold); font-size: 1.8rem; margin: 0 0 20px 0;"></h2>
+            <div id="questions-history" style="margin-top:20px;">
+                <p style="color: #64748b;">Questions envoyées apparaîtront ici...</p>
+            </div>
         </div>
         
         <div class="panel">
-            <h3 style="font-family:'Syne'; font-size:0.9rem; color:var(--gold);">➕ AJOUTER QUESTION</h3>
-            <input type="text" id="q-txt" placeholder="Question...">
-            <input type="text" id="r1" placeholder="Bonne réponse">
-            <input type="text" id="r2" placeholder="Fausse 1">
-            <input type="text" id="r3" placeholder="Fausse 2">
-            <input type="text" id="r4" placeholder="Fausse 3">
-            <button class="btn btn-gold" style="width:100%" onclick="addAndSend()">ENVOYER DIRECTEMENT</button>
+            <h3 style="font-family:'Syne'; font-size:1rem; color:var(--gold); margin-bottom: 15px;">➕ ENVOYER UNE QUESTION</h3>
+            <input type="text" id="q-txt" placeholder="Texte de la question...">
+            <input type="text" id="r1" placeholder="Bonne réponse (S'affichera en 1er)">
+            <input type="text" id="r2" placeholder="Fausse réponse 1">
+            <input type="text" id="r3" placeholder="Fausse réponse 2">
+            <input type="text" id="r4" placeholder="Fausse réponse 3">
+            <button class="btn btn-gold" style="width:100%; margin-top: 10px;" onclick="addAndSend()">ATTAQUER MAINTENANT</button>
         </div>
     </div>
 </div>
@@ -73,13 +77,26 @@
     function connect() {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         ws = new WebSocket(`${protocol}//${location.host}`);
+        
+        ws.onopen = () => { console.log("Connecté !"); };
+
         ws.onmessage = (e) => {
             const data = JSON.parse(e.data);
+            console.log("Reçu:", data);
+            
+            // On attrape tout ce qui identifie un joueur
             if (data.type === 'player_list') { data.players.forEach(p => players.add(p.name)); }
-            if (data.type === 'new_player' || data.type === 'join') { players.add(data.name || data.playerName); }
-            if (data.type === 'answer_update') {
-                if(!scores[data.playerName]) scores[data.playerName] = 0;
-                scores[data.playerName] += 1;
+            if (data.type === 'new_player' || data.type === 'join' || data.playerName) {
+                players.add(data.name || data.playerName);
+            }
+            
+            // On compte les points
+            if (data.type === 'answer_update' || data.type === 'answer') {
+                const name = data.playerName || data.name;
+                if(name) {
+                    if(!scores[name]) scores[name] = 0;
+                    scores[name] += 1;
+                }
             }
             updateUI();
         };
@@ -95,28 +112,39 @@
 
     function updateUI() {
         document.getElementById('count').textContent = players.size;
-        document.getElementById('player-list').innerHTML = Array.from(players).map(p => `<div class="player-tag">🛡️ ${p}</div>`).join('');
+        if(players.size > 0) {
+            document.getElementById('player-list').innerHTML = Array.from(players).map(p => `<div class="player-tag">🛡️ ${p}</div>`).join('');
+        }
     }
 
     function updateLeaderboard() {
         const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]).slice(0,5);
-        document.getElementById('scores-list').innerHTML = sorted.map(([n,s]) => `<div>${n}: ${s} pts</div>`).join('');
+        document.getElementById('scores-list').innerHTML = sorted.map(([n,s], i) => `<div>${i+1}. <b>${n}</b> (${s} pts)</div>`).join('');
     }
 
     function addAndSend() {
         const q = {
+            type: 'question',
             text: document.getElementById('q-txt').value,
             options: [document.getElementById('r1').value, document.getElementById('r2').value, document.getElementById('r3').value, document.getElementById('r4').value]
         };
-        ws.send(JSON.stringify({ type: 'admin_add_question', question: q }));
+        if(!q.text || !q.options[0]) return alert("Il manque la question !");
+        
+        ws.send(JSON.stringify(q));
+        
+        const hist = document.getElementById('questions-history');
+        if(hist.innerText.includes("apparaîtront")) hist.innerHTML = "";
         const div = document.createElement('div');
-        div.innerHTML = `<div style="background:#222; padding:10px; border-radius:5px; margin-bottom:5px;">✅ ${q.text}</div>`;
-        document.getElementById('questions-list').prepend(div);
+        div.innerHTML = `<div style="background:#222; padding:12px; border-radius:8px; margin-bottom:8px; border-left: 3px solid var(--gold);"><b>Q:</b> ${q.text}</div>`;
+        hist.prepend(div);
+        
+        // On vide les champs
+        document.getElementById('q-txt').value = "";
+        document.getElementById('r1').value = ""; document.getElementById('r2').value = "";
+        document.getElementById('r3').value = ""; document.getElementById('r4').value = "";
     }
 
-    function togglePause() { ws.send(JSON.stringify({ type: 'master_pause_on' })); alert("Jeu en pause !"); }
-    function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
-    function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
+    function sendToWs(type) { ws.send(JSON.stringify({ type: type })); }
 
     connect();
 </script>
