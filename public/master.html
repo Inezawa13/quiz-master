@@ -1,328 +1,148 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Question pour un Impérien — Panel Maître</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #080810; --surface: #10101a; --surface2: #18182a; --surface3: #22223a;
-    --accent: #7c3aed; --accent2: #a855f7; --gold: #f59e0b; --green: #10b981;
-    --red: #ef4444; --blue: #3b82f6; --text: #f8fafc; --muted: #64748b; --border: rgba(255,255,255,.06);
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
-  h1,h2,h3,h4 { font-family:'Syne',sans-serif; }
-
-  #auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#1a0a2e 0%,#080810 70%); }
-  .auth-card { background:var(--surface); border:1px solid rgba(124,58,237,.3); border-radius:24px; padding:2.5rem; width:100%; max-width:400px; text-align:center; }
-  .logo { font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,var(--accent2),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:1.5rem; }
-
-  input[type="password"],input[type="text"],input[type="number"],textarea,select {
-    width:100%; padding:.9rem 1.1rem; border-radius:10px; background:var(--surface2);
-    border:1.5px solid var(--border); color:var(--text); font-size:1rem;
-    font-family:'DM Sans',sans-serif; outline:none; transition:border .2s; resize:vertical;
-  }
-  input:focus,textarea:focus,select:focus { border-color:var(--accent2); }
-  .btn { padding:.8rem 1.4rem; border-radius:10px; border:none; font-size:.95rem; font-weight:600; font-family:'Syne',sans-serif; cursor:pointer; transition:all .2s; }
-  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
-  .btn-success { background:var(--green); color:white; }
-  .btn-danger { background:var(--red); color:white; }
-  .btn-gold { background:var(--gold); color:#000; }
-  .btn-blue { background:var(--blue); color:white; }
-  .btn-orange { background:#f97316; color:white; }
-  .btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
-  .btn:hover { opacity:.85; }
-  .btn-sm { padding:.5rem 1rem; font-size:.85rem; }
-  .btn-icon { padding:.5rem .7rem; }
-
-  #main-screen { display:none; }
-  .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
-  .topbar .logo-sm { font-size:1.1rem; font-weight:800; background:linear-gradient(135deg,var(--accent2),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .status-pill { padding:.3rem .9rem; border-radius:100px; font-size:.8rem; font-weight:600; }
-  .status-waiting { background:rgba(100,116,139,.2); color:var(--muted); }
-  .status-live { background:rgba(239,68,68,.2); color:var(--red); animation:blink 1s infinite; }
-  .status-paused { background:rgba(245,158,11,.2); color:var(--gold); }
-  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.5;} }
-
-  .layout { display:grid; grid-template-columns:300px 1fr; gap:0; height:calc(100vh - 60px); }
-  .sidebar { background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:1.2rem; display:flex; flex-direction:column; gap:1rem; }
-  .panel { background:var(--surface2); border-radius:14px; padding:1.2rem; border:1px solid var(--border); }
-  .panel h3 { font-size:.85rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:1rem; }
-
-  .player-list { display:flex; flex-direction:column; gap:.5rem; }
-  .player-item { display:flex; justify-content:space-between; align-items:center; padding:.5rem .7rem; background:var(--surface3); border-radius:8px; font-size:.9rem; }
-  .player-score { font-family:'Syne',sans-serif; font-weight:700; color:var(--accent2); font-size:.9rem; }
-  .answer-feed { display:flex; flex-direction:column; gap:.4rem; max-height:180px; overflow-y:auto; }
-  .answer-item { padding:.4rem .7rem; background:var(--surface3); border-radius:8px; font-size:.85rem; }
-  .answer-item .name { color:var(--accent2); font-weight:600; }
-
-  .main-content { overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem; }
-
-  .control-bar { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.2rem 1.5rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
-  .phase-label { font-size:.85rem; color:var(--muted); flex:1; min-width:150px; }
-
-  .master-timer { background:var(--surface2); border-radius:10px; padding:.6rem 1rem; display:flex; align-items:center; gap:.75rem; border:1px solid var(--border); }
-  .master-timer-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; min-width:35px; }
-  .master-timer-text.danger { color:var(--red); }
-  .master-timer-bar-bg { flex:1; height:6px; background:var(--surface3); border-radius:100px; overflow:hidden; }
-  .master-timer-bar { height:100%; border-radius:100px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width 1s linear; }
-  .master-timer-bar.danger { background:linear-gradient(90deg,#ef4444,#f97316); }
-
-  .rounds-tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
-  .round-tab { padding:.4rem .9rem; border-radius:8px; border:1.5px solid var(--border); background:var(--surface2); color:var(--muted); font-size:.85rem; font-weight:600; cursor:pointer; transition:all .2s; font-family:'Syne',sans-serif; }
-  .round-tab.active { border-color:var(--gold); color:var(--gold); background:rgba(245,158,11,.1); }
-
-  .question-list { display:flex; flex-direction:column; gap:.75rem; }
-  .q-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.2rem; }
-  .q-card-header { display:flex; align-items:center; gap:.75rem; margin-bottom:.5rem; }
-  .q-num { font-family:'Syne',sans-serif; font-weight:800; color:var(--accent2); }
-  .q-type-badge { padding:.2rem .6rem; border-radius:100px; font-size:.75rem; font-weight:600; background:rgba(124,58,237,.2); color:var(--accent2); }
-  .q-preview { color:var(--muted); font-size:.9rem; }
-  .q-card-actions { display:flex; gap:.5rem; margin-top:.75rem; }
-
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:100; padding:1rem; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid rgba(124,58,237,.3); border-radius:20px; padding:1.5rem; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; }
-  
-  .choice-row { display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;}
-  .correct-dot { width:12px; height:12px; border-radius:50%; background:var(--surface3); border:2px solid var(--muted); cursor:pointer; flex-shrink:0; }
-  .correct-dot.active { background:var(--green); border-color:var(--green); }
-
-  .toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); color:white; padding:1rem; border-radius:10px; border:1px solid var(--accent); animation: fadeUp 0.3s ease; z-index:1000; }
-</style>
+    <meta charset="UTF-8">
+    <title>Master Panel — Podium & Pause</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #080810; --surface: #10101a; --accent: #7c3aed; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; }
+        body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns:350px 1fr; height:100vh; overflow:hidden; }
+        
+        /* Barre latérale (Réponses + Top 5) */
+        .sidebar { background:var(--surface); padding:1.5rem; border-right:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; }
+        #answer-feed { flex: 1; overflow-y: auto; margin-bottom: 1rem; }
+        .final-leaderboard { background: #1a1a2e; border-top: 2px solid var(--gold); padding: 1rem; border-radius: 10px 10px 0 0; }
+        .answer-item { padding:0.8rem; border-radius:10px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; background: #161625; border-left: 4px solid var(--accent); }
+        
+        /* Zone principale */
+        .main { padding:2rem; overflow-y: auto; }
+        .btn { padding:0.8rem 1.2rem; border-radius:12px; border:none; font-weight:800; cursor:pointer; font-family:'Syne'; color:white; margin-right:0.5rem; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-pause { background: #3b82f6; } /* Bouton Bleu pour la Pause */
+        .btn-next { background: var(--gold); color: black; }
+        #timer-display { font-size: 5rem; font-family:'Syne'; font-weight:800; margin: 1rem 0; color: white; }
+    </style>
 </head>
 <body>
-
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="logo">⚔️ Question pour un Impérien</div>
-    <p style="color:var(--muted);margin-bottom:1.5rem;">Panel Maître — Accès sécurisé</p>
-    <div style="display:flex;flex-direction:column;gap:.75rem;">
-      <input type="password" id="pwd-input" placeholder="Mot de passe maître..." onkeydown="if(event.key==='Enter')auth()">
-      <button class="btn btn-primary" onclick="auth()">Accéder au panel</button>
-      <p id="auth-error" style="color:var(--red);font-size:.85rem;display:none;">Mot de passe incorrect</p>
-    </div>
-  </div>
-</div>
-
-<div id="main-screen">
-  <div class="topbar">
-    <span class="logo-sm">⚔️ Panel Maître</span>
-    <div style="display:flex;align-items:center;gap:.75rem;">
-      <span id="phase-pill" class="status-pill status-waiting">EN ATTENTE</span>
-      <button class="btn btn-orange btn-sm" id="btn-pause" onclick="pauseGame()" style="display:none;">⏸️ Pause</button>
-      <button class="btn btn-success btn-sm" id="btn-resume" onclick="resumeGame()" style="display:none;">▶️ Reprendre</button>
-      <button class="btn btn-ghost btn-sm" onclick="resetGame()">🔄 Reset</button>
-    </div>
-  </div>
-
-  <div class="layout">
     <div class="sidebar">
-      <div class="panel">
-        <h3>👥 Joueurs (<span id="player-count">0</span>)</h3>
-        <div class="player-list" id="player-list"></div>
-      </div>
-      <div class="panel">
-        <h3>💬 Réponses (<span id="answer-count">0</span>/<span id="answer-total">0</span>)</h3>
-        <div class="answer-feed" id="answer-feed"></div>
-      </div>
+        <h2 style="font-family:'Syne'; color:var(--gold);">⚡ RÉPONSES</h2>
+        <div id="answer-feed"></div>
+
+        <div class="final-leaderboard">
+            <h3 style="font-family:'Syne'; font-size: 0.9rem; margin-bottom:0.5rem;">🏆 TOP 5 SECRET</h3>
+            <div id="top-5-list" style="font-size: 0.85rem; margin-bottom:10px;"><p style="color:var(--muted)">Aucun score...</p></div>
+            <button onclick="updateLeaderboard()" style="width:100%; background:none; border:1px solid var(--gold); color:var(--gold); cursor:pointer; padding:5px; border-radius:4px; font-size: 0.7rem;">CALCULER LES FINALISTES</button>
+        </div>
     </div>
 
-    <div class="main-content">
-      <div class="control-bar">
-        <span class="phase-label" id="phase-label">Chargement...</span>
-        <button class="btn btn-primary" id="btn-intro" onclick="startIntro()">▶️ Intro</button>
-        <button class="btn btn-success" id="btn-start" onclick="startGame()">🚀 Démarrer</button>
-        <button class="btn btn-gold" id="btn-start-round" onclick="startRound()" style="display:none;">⚔️ Manche</button>
-        <button class="btn btn-gold" id="btn-next" onclick="nextQuestion()" style="display:none;">⏭ Suivant</button>
-        <button class="btn btn-blue" id="btn-lb" onclick="showLeaderboard()" style="display:none;">🏆 Score</button>
-      </div>
-
-      <div class="master-timer" id="master-timer" style="display:none;">
-        <div class="master-timer-text" id="master-timer-text">45</div>
-        <div class="master-timer-bar-bg"><div class="master-timer-bar" id="master-timer-bar"></div></div>
-      </div>
-
-      <div class="intro-section">
-        <h2>🎬 Vidéo d'intro</h2>
-        <div style="display:flex; gap:.5rem;">
-            <input type="text" id="intro-url-input" placeholder="Lien YouTube...">
-            <button class="btn btn-ghost" onclick="saveIntro()">Ok</button>
+    <div class="main">
+        <div style="margin-bottom:2rem;">
+            <button class="btn" style="background:var(--accent)" onclick="startGame()">🚀 START</button>
+            <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" style="display:none;">SUIVANT ⏭️</button>
+            <button class="btn btn-next" id="btn-start-round" onclick="startRound()" style="display:none;">LANCER MANCHE ⚔️</button>
         </div>
-      </div>
 
-      <div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:1rem;">
-          <h3>❓ Questions</h3>
-          <button class="btn btn-primary" onclick="openAddModal()">+ Ajouter</button>
+        <div id="timer-display">--</div>
+        <div id="round-name" style="color:var(--gold); font-family:'Syne'; font-size:1.5rem; text-transform: uppercase;">MANCHE 1</div>
+
+        <div style="margin-top: 4rem; color: var(--muted); font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+            <b>Rappel Maître :</b> 1er (+3 pts), 2ème (+2 pts), 3ème (+1 pt). <br>
+            <i>Les points sont calculés en secret pour ton annonce finale.</i>
         </div>
-        <div class="rounds-tabs" id="rounds-tabs"></div>
-        <div class="question-list" id="question-list"></div>
-      </div>
     </div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h3 id="modal-title">Question</h3>
-    <select id="q-type-select" onchange="updateTypeUI()" style="margin-bottom:1rem;">
-        <option value="qcm">QCM</option>
-        <option value="vrai_faux">Vrai/Faux</option>
-        <option value="texte">Libre</option>
-    </select>
-    <textarea id="q-question" placeholder="Ta question..." style="margin-bottom:1rem;"></textarea>
-    
-    <div id="qcm-choices">
-        <div id="choices-editor"></div>
-        <button class="btn btn-ghost btn-sm" onclick="addChoice()">+ Choix</button>
-    </div>
-    
-    <input type="text" id="correct-answer-input" placeholder="Réponse correcte..." style="display:none; margin-top:1rem;">
-    
-    <div class="modal-actions" style="margin-top:1.5rem;">
-        <button class="btn btn-primary" onclick="saveQuestion()">Sauvegarder</button>
-        <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
-    </div>
-  </div>
-</div>
+    <audio id="buzzer-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3"></audio>
 
-<script>
-let ws;
-let activeRoundTab = 0;
-let rounds = [
-  { name: "Manche 1", questions: [] },
-  { name: "Manche 2", questions: [] },
-  { name: "Manche 3", questions: [] }
-];
+    <script>
+        let ws; 
+        let answersReceived = 0; 
+        let scores = {}; 
+        let isPaused = false;
 
-function auth() {
-  const pwd = document.getElementById('pwd-input').value;
-  connect(pwd);
-}
+        function connect() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}`);
 
-function connect(pwd) {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(`${protocol}//${location.host}`);
-  ws.onopen = () => ws.send(JSON.stringify({ type: 'master_auth', password: pwd }));
-  ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
-}
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                
+                // Réception des réponses + Calcul des points
+                if(data.type === 'answer_update') {
+                    document.getElementById('buzzer-sound').play();
+                    answersReceived++;
+                    
+                    let pts = 1; // Point pour la bonne réponse
+                    if(answersReceived === 1) pts += 3;
+                    if(answersReceived === 2) pts += 2;
+                    if(answersReceived === 3) pts += 1;
 
-function handleMessage(data) {
-    if(data.type === 'master_auth_ok') {
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('main-screen').style.display = 'block';
-        renderRoundTabs();
-    }
-    if(data.type === 'phase_change') updatePhaseUI(data);
-}
+                    if(!scores[data.playerName]) scores[data.playerName] = 0;
+                    scores[data.playerName] += pts;
 
-function updatePhaseUI(data) {
-    document.getElementById('phase-label').textContent = "Phase : " + data.phase;
-    const btnNext = document.getElementById('btn-next');
-    const btnStartRound = document.getElementById('btn-start-round');
-    
-    btnNext.style.display = (data.phase === 'question') ? 'block' : 'none';
-    btnStartRound.style.display = (data.phase === 'round_intro') ? 'block' : 'none';
-}
+                    // Affichage dans le flux en direct
+                    const div = document.createElement('div');
+                    div.className = 'answer-item';
+                    div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts} pts</span>`;
+                    document.getElementById('answer-feed').prepend(div);
+                }
 
-function renderRoundTabs() {
-    const container = document.getElementById('rounds-tabs');
-    container.innerHTML = rounds.map((r, i) => `
-        <div class="round-tab ${i === activeRoundTab ? 'active' : ''}" onclick="activeRoundTab=${i}; renderRoundTabs(); renderQuestions();">
-            ${r.name}
-        </div>
-    `).join('');
-}
+                if(data.type === 'phase_change') {
+                    if(data.phase === 'question') {
+                        answersReceived = 0;
+                        document.getElementById('answer-feed').innerHTML = "";
+                        startTimer(data.timer || 30);
+                    }
+                    if(data.phase === 'round_intro') {
+                        document.getElementById('round-name').textContent = data.roundName;
+                    }
+                    document.getElementById('btn-next').style.display = (data.phase === 'question') ? 'inline-block' : 'none';
+                    document.getElementById('btn-start-round').style.display = (data.phase === 'round_intro') ? 'inline-block' : 'none';
+                }
+            };
+        }
 
-function renderQuestions() {
-    const list = document.getElementById('question-list');
-    const qs = rounds[activeRoundTab].questions;
-    list.innerHTML = qs.map((q, i) => `
-        <div class="q-card">
-            <b>${i+1}. ${q.question}</b><br>
-            <small>Réponse : ${q.correctAnswer}</small>
-        </div>
-    `).join('');
-}
+        // Fonction Pause Pipi
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('btn-pause');
+            if(isPaused) {
+                btn.style.background = "#ef4444"; 
+                btn.textContent = "▶️ REPRENDRE LE JEU";
+                ws.send(JSON.stringify({ type: 'master_pause_on' }));
+            } else {
+                btn.style.background = "#3b82f6"; 
+                btn.textContent = "☕ PAUSE PIPI";
+                ws.send(JSON.stringify({ type: 'master_pause_off' }));
+            }
+        }
 
-function openAddModal() {
-    document.getElementById('modal').classList.add('open');
-    document.getElementById('choices-editor').innerHTML = '';
-    for(let i=0; i<4; i++) addChoice();
-}
+        // Calcul du Top 5 pour ton annonce finale
+        function updateLeaderboard() {
+            const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
+            const list = document.getElementById('top-5-list');
+            if(sorted.length === 0) { list.innerHTML = "Aucun score enregistré."; return; }
+            list.innerHTML = sorted.map(([name, score], i) => `<div>${i+1}. <b>${name}</b> — ${score} pts</div>`).join('');
+        }
 
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
+        function startTimer(sec) {
+            let t = sec;
+            const el = document.getElementById('timer-display');
+            const count = setInterval(() => {
+                t--;
+                el.textContent = Math.max(0, t);
+                if(t <= 0) {
+                    clearInterval(count);
+                    el.textContent = "TEMPS ÉCOULÉ !";
+                }
+            }, 1000);
+        }
 
-function addChoice() {
-    const row = document.createElement('div');
-    row.className = 'choice-row';
-    row.innerHTML = `
-        <div class="correct-dot" onclick="setCorrect(this)"></div>
-        <input type="text" placeholder="Choix...">
-    `;
-    document.getElementById('choices-editor').appendChild(row);
-}
+        function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
+        function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
+        function startRound() { ws.send(JSON.stringify({ type: 'master_start_round' })); }
 
-function setCorrect(el) {
-    document.querySelectorAll('.correct-dot').forEach(d => d.classList.remove('active'));
-    el.classList.add('active');
-}
-
-function updateTypeUI() {
-    const type = document.getElementById('q-type-select').value;
-    document.getElementById('qcm-choices').style.display = (type === 'qcm') ? 'block' : 'none';
-    document.getElementById('correct-answer-input').style.display = (type !== 'qcm') ? 'block' : 'none';
-}
-
-function saveQuestion() {
-    const questionText = document.getElementById('q-question').value;
-    const type = document.getElementById('q-type-select').value;
-    let correctAnswer = "";
-    let choices = [];
-
-    if(type === 'qcm') {
-        document.querySelectorAll('.choice-row').forEach(row => {
-            const val = row.querySelector('input').value;
-            if(val) choices.push(val);
-            if(row.querySelector('.correct-dot.active')) correctAnswer = val;
-        });
-    } else {
-        correctAnswer = document.getElementById('correct-answer-input').value;
-    }
-
-    rounds[activeRoundTab].questions.push({
-        type: type,
-        question: questionText,
-        choices: choices,
-        correctAnswer: correctAnswer
-    });
-
-    ws.send(JSON.stringify({
-        type: 'master_set_round_questions',
-        roundIndex: activeRoundTab,
-        questions: rounds[activeRoundTab].questions
-    }));
-
-    closeModal();
-    renderQuestions();
-    showToast("Question ajoutée !");
-}
-
-function showToast(msg) {
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
-
-function startIntro() { ws.send(JSON.stringify({ type: 'master_start_intro' })); }
-function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
-function startRound() { ws.send(JSON.stringify({ type: 'master_start_round' })); }
-function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
-</script>
+        connect();
+    </script>
 </body>
 </html>
