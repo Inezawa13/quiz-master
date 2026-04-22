@@ -2,164 +2,90 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Question pour un Impérien — Joueur</title>
+    <title>Master Panel — Podium & Pause</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #080810; --surface: #10101a; --accent: #7c3aed; 
-            --gold: #f59e0b; --text: #f8fafc; --muted: #64748b;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { 
-            background: var(--bg); color: var(--text); 
-            font-family: 'DM Sans', sans-serif; overflow: hidden; 
-        }
-
-        /* ÉCRAN D'ATTENTE / AUTH */
-        #setup-screen, #wait-screen {
-            height: 100vh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 2rem; text-align: center;
-        }
-
-        /* ANIMATION DE TRANSITION DE MANCHE */
-        #round-transition {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #1a0a2e 0%, #080810 100%);
-            display: none; flex-direction: column; align-items: center;
-            justify-content: center; z-index: 9999; text-align: center;
-        }
-        .round-title-anim {
-            font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800;
-            color: var(--gold); text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
-            animation: cosmosZoom 3s forwards ease-in-out;
-        }
-        @keyframes cosmosZoom {
-            0% { transform: scale(0.5); opacity: 0; filter: blur(10px); }
-            30% { transform: scale(1.1); opacity: 1; filter: blur(0px); }
-            70% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.2); opacity: 0; filter: blur(5px); }
-        }
-
-        /* ÉCRAN DE JEU */
-        #game-screen { display: none; padding: 1.5rem; height: 100vh; flex-direction: column; }
-        .question-box { background: var(--surface); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; }
-        .q-text { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 1rem; }
-        
-        .options-grid { display: grid; gap: 1rem; width: 100%; }
-        .opt-btn { 
-            background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
-            color: white; padding: 1.2rem; border-radius: 15px; font-weight: 700;
-            font-size: 1rem; cursor: pointer; transition: 0.2s;
-        }
-        .opt-btn:active { transform: scale(0.95); background: var(--accent); }
-        .opt-btn.selected { background: var(--accent); border-color: var(--gold); }
-
-        .btn-join { 
-            background: linear-gradient(135deg, var(--accent), #a855f7);
-            color: white; border: none; padding: 1rem 2rem; 
-            border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 1rem;
-        }
-        input { 
-            background: var(--surface); border: 1px solid var(--accent);
-            color: white; padding: 1rem; border-radius: 12px; width: 100%; max-width: 300px;
-            text-align: center; margin-bottom: 1rem; outline: none;
-        }
+        :root { --bg: #080810; --surface: #10101a; --accent: #7c3aed; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; }
+        body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns:350px 1fr; height:100vh; overflow:hidden; }
+        .sidebar { background:var(--surface); padding:1.5rem; border-right:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; }
+        #answer-feed { flex: 1; overflow-y: auto; margin-bottom: 1rem; }
+        .final-leaderboard { background: #1a1a2e; border-top: 2px solid var(--gold); padding: 1rem; border-radius: 10px 10px 0 0; }
+        .answer-item { padding:0.8rem; border-radius:10px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; background: #161625; border-left: 4px solid var(--accent); }
+        .main { padding:2rem; overflow-y: auto; }
+        .btn { padding:0.8rem 1.2rem; border-radius:12px; border:none; font-weight:800; cursor:pointer; font-family:'Syne'; color:white; margin-right:0.5rem; }
+        .btn-pause { background: #3b82f6; }
+        .btn-next { background: var(--gold); color: black; }
+        #timer-display { font-size: 5rem; font-family:'Syne'; font-weight:800; margin: 1rem 0; }
     </style>
 </head>
 <body>
-
-    <div id="round-transition">
-        <div id="round-anim-name" class="round-title-anim"></div>
-    </div>
-
-    <div id="setup-screen">
-        <h1 style="font-family:'Syne'; margin-bottom: 2rem;">REJOINDRE LE JEU</h1>
-        <input type="text" id="player-name" placeholder="Ton pseudo...">
-        <button class="btn-join" onclick="joinGame()">ENTRER DANS L'ARÈNE</button>
-    </div>
-
-    <div id="wait-screen" style="display:none;">
-        <h2 style="color:var(--gold)">PRÉPARE TON COSMOS</h2>
-        <p style="margin-top:1rem; color:var(--muted)">Le Maître va bientôt lancer la partie...</p>
-    </div>
-
-    <div id="game-screen">
-        <div class="question-box">
-            <div id="question-text" class="q-text">Chargement de la question...</div>
+    <div class="sidebar">
+        <h2 style="font-family:'Syne'; color:var(--gold);">⚡ RÉPONSES</h2>
+        <div id="answer-feed"></div>
+        <div class="final-leaderboard">
+            <h3 style="font-family:'Syne'; font-size: 0.9rem; margin-bottom:0.5rem;">🏆 TOP 5 SECRET</h3>
+            <div id="top-5-list" style="font-size: 0.85rem; margin-bottom:10px;"><p style="color:var(--muted)">Aucun score...</p></div>
+            <button onclick="updateLeaderboard()" style="width:100%; background:none; border:1px solid var(--gold); color:var(--gold); cursor:pointer; padding:5px; border-radius:4px;">Calculer le Top 5</button>
         </div>
-        <div id="options-container" class="options-grid"></div>
     </div>
+    <div class="main">
+        <div style="margin-bottom:2rem;">
+            <button class="btn" style="background:var(--accent)" onclick="startGame()">🚀 START</button>
+            <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" style="display:none;">SUIVANT ⏭️</button>
+            <button class="btn btn-next" id="btn-start-round" onclick="startRound()" style="display:none;">LANCER MANCHE ⚔️</button>
+        </div>
+        <div id="timer-display">--</div>
+        <div id="round-name" style="color:var(--gold); font-family:'Syne'; font-size:1.5rem;">MANCHE 1</div>
+    </div>
+    <audio id="buzzer-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3"></audio>
 
     <script>
-        let ws;
-        let myName = "";
-
-        function joinGame() {
-            myName = document.getElementById('player-name').value;
-            if(!myName) return alert("Choisis un pseudo !");
-            
+        let ws; let answersReceived = 0; let scores = {}; let isPaused = false;
+        function connect() {
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}`);
-
-            ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'join', name: myName }));
-                document.getElementById('setup-screen').style.display = 'none';
-                document.getElementById('wait-screen').style.display = 'flex';
-            };
-
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
-
-                // Gestion de l'animation de manche
-                if (data.type === 'phase_change' && data.phase === 'round_intro') {
-                    showRoundAnim(data.roundName);
+                if(data.type === 'answer_update') {
+                    document.getElementById('buzzer-sound').play();
+                    answersReceived++;
+                    let pts = 1; 
+                    if(answersReceived === 1) pts += 3;
+                    if(answersReceived === 2) pts += 2;
+                    if(answersReceived === 3) pts += 1;
+                    if(!scores[data.playerName]) scores[data.playerName] = 0;
+                    scores[data.playerName] += pts;
+                    const div = document.createElement('div'); div.className = 'answer-item';
+                    div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts}</span>`;
+                    document.getElementById('answer-feed').prepend(div);
                 }
-
-                // Affichage d'une question
-                if (data.type === 'question') {
-                    showQuestion(data);
-                }
-                
-                // Fin de question ou reset
-                if (data.type === 'phase_change' && data.phase === 'wait') {
-                    document.getElementById('game-screen').style.display = 'none';
-                    document.getElementById('wait-screen').style.display = 'flex';
+                if(data.type === 'phase_change') {
+                    if(data.phase === 'question') { answersReceived = 0; document.getElementById('answer-feed').innerHTML = ""; startTimer(data.timer || 30); }
+                    if(data.phase === 'round_intro') { document.getElementById('round-name').textContent = data.roundName; }
+                    document.getElementById('btn-next').style.display = (data.phase === 'question') ? 'inline-block' : 'none';
+                    document.getElementById('btn-start-round').style.display = (data.phase === 'round_intro') ? 'inline-block' : 'none';
                 }
             };
         }
-
-        function showRoundAnim(name) {
-            const trans = document.getElementById('round-transition');
-            const nameText = document.getElementById('round-anim-name');
-            nameText.textContent = name;
-            trans.style.display = 'flex';
-            setTimeout(() => { trans.style.display = 'none'; }, 3000);
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('btn-pause');
+            if(isPaused) { btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE"; ws.send(JSON.stringify({ type: 'master_pause_on' })); }
+            else { btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI"; ws.send(JSON.stringify({ type: 'master_pause_off' })); }
         }
-
-        function showQuestion(data) {
-            document.getElementById('wait-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'flex';
-            document.getElementById('question-text').textContent = data.text;
-            
-            const container = document.getElementById('options-container');
-            container.innerHTML = "";
-            
-            data.options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'opt-btn';
-                btn.textContent = opt;
-                btn.onclick = () => {
-                    // Désactiver les autres boutons après le clic
-                    Array.from(container.children).forEach(b => b.style.opacity = "0.5");
-                    btn.style.opacity = "1";
-                    btn.classList.add('selected');
-                    ws.send(JSON.stringify({ type: 'answer', answer: opt }));
-                };
-                container.appendChild(btn);
-            });
+        function updateLeaderboard() {
+            const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
+            document.getElementById('top-5-list').innerHTML = sorted.map(([name, score], i) => `<div>${i+1}. <b>${name}</b> — ${score} pts</div>`).join('');
         }
+        function startTimer(sec) {
+            let t = sec; const el = document.getElementById('timer-display');
+            const count = setInterval(() => { t--; el.textContent = Math.max(0, t); if(t <= 0) clearInterval(count); }, 1000);
+        }
+        function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
+        function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
+        function startRound() { ws.send(JSON.stringify({ type: 'master_start_round' })); }
+        connect();
     </script>
 </body>
 </html>
