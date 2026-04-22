@@ -1,94 +1,367 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena — Saint Seiya</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #05050a; --gold: #f59e0b; --accent: #7c3aed; }
-        body { background: var(--bg); color: white; font-family: 'DM Sans', sans-serif; margin: 0; text-align: center; overflow: hidden; }
-        #stars { position: fixed; width: 100%; height: 100%; z-index: -1; }
-        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle 2s infinite; }
-        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-        .screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        input { background: rgba(255,255,255,0.05); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; width: 100%; max-width: 300px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
-        .btn-gold { background: var(--gold); color: black; border: none; padding: 15px 40px; border-radius: 12px; font-weight: 800; cursor: pointer; font-family: 'Syne'; text-transform: uppercase; }
-        .waiting-msg { font-family: 'Syne'; font-size: 1.8rem; color: var(--gold); text-transform: uppercase; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(0.95); opacity: 0.7; } 50% { transform: scale(1); opacity: 1; } }
-        .opt-btn { background: #161625; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin: 8px; width: 100%; max-width: 400px; font-weight: bold; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Quiz SSA</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070f;
+    --surface: #11111e;
+    --surface2: #1a1a2e;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #f1f5f9;
+    --muted: #64748b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘DM Sans’, sans-serif;
+min-height: 100dvh;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 1.5rem;
+overflow-x: hidden;
+}
+
+/* BG animé */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background: radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.08) 0%, transparent 60%),
+radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.05) 0%, transparent 50%);
+pointer-events: none;
+z-index: 0;
+}
+
+.wrap { width:100%; max-width:420px; position:relative; z-index:1; }
+
+/* SCREENS */
+.screen { display:none; flex-direction:column; align-items:center; gap:1.2rem; }
+.screen.active { display:flex; animation: slideUp .4s cubic-bezier(.22,1,.36,1); }
+@keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+.logo {
+font-family: ‘Syne’, sans-serif;
+font-size: 2.2rem;
+font-weight: 800;
+background: linear-gradient(135deg, var(–accent2), var(–gold));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+text-align: center;
+}
+
+.card {
+width: 100%;
+background: var(–surface);
+border-radius: 20px;
+padding: 1.5rem;
+border: 1px solid rgba(255,255,255,0.06);
+}
+
+input {
+width: 100%; padding: 1rem 1.2rem;
+border-radius: 14px;
+background: var(–surface2);
+border: 2px solid transparent;
+color: var(–text);
+font-size: 1.1rem;
+font-family: ‘DM Sans’, sans-serif;
+outline: none;
+transition: border .2s;
+}
+input:focus { border-color: var(–accent2); }
+
+.btn {
+width: 100%; padding: 1rem;
+border-radius: 14px; border: none;
+font-size: 1.05rem; font-weight: 700;
+font-family: ‘Syne’, sans-serif;
+cursor: pointer; transition: all .2s;
+letter-spacing: .02em;
+}
+.btn-primary {
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+color: white;
+}
+.btn-primary:active { transform: scale(.97); }
+
+/* WAITING */
+.pulse-ring {
+width: 70px; height: 70px;
+border-radius: 50%;
+background: var(–accent);
+margin: .5rem auto;
+position: relative;
+animation: pulseRing 1.8s ease-in-out infinite;
+}
+.pulse-ring::after {
+content: ‘’;
+position: absolute;
+inset: -8px;
+border-radius: 50%;
+border: 2px solid var(–accent);
+animation: pulseRing2 1.8s ease-in-out infinite;
+}
+@keyframes pulseRing { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+@keyframes pulseRing2 { 0%{opacity:.6;transform:scale(1)} 100%{opacity:0;transform:scale(1.5)} }
+
+/* QUESTION */
+.q-header {
+display: flex; justify-content: space-between; align-items: center;
+margin-bottom: .8rem;
+}
+.q-badge {
+background: var(–accent);
+padding: .3rem .9rem; border-radius: 100px;
+font-size: .8rem; font-weight: 700;
+}
+.round-badge {
+background: rgba(245,158,11,.15);
+color: var(–gold);
+padding: .3rem .9rem; border-radius: 100px;
+font-size: .8rem; font-weight: 700;
+border: 1px solid rgba(245,158,11,.3);
+}
+.q-text {
+font-family: ‘Syne’, sans-serif;
+font-size: 1.2rem; font-weight: 700;
+line-height: 1.4; margin: 1rem 0 1.4rem 0;
+}
+.choices { display: flex; flex-direction: column; gap: .7rem; }
+.choice {
+padding: .9rem 1.1rem;
+border-radius: 12px;
+border: 2px solid rgba(255,255,255,.07);
+background: var(–surface2);
+color: var(–text);
+font-size: 1rem;
+text-align: left; cursor: pointer;
+transition: all .2s;
+font-family: ‘DM Sans’, sans-serif;
+display: flex; align-items: center; gap: .7rem;
+}
+.choice:active { transform: scale(.98); }
+.choice .letter {
+color: var(–accent2); font-weight: 700;
+font-family: ‘Syne’, sans-serif;
+min-width: 20px;
+}
+.choice.selected { border-color: var(–accent2); background: rgba(124,58,237,.2); }
+.choice.correct  { border-color: var(–green);   background: rgba(16,185,129,.2); }
+.choice.wrong    { border-color: var(–red);     background: rgba(239,68,68,.2); }
+.choice:disabled, .choice.locked { pointer-events: none; }
+
+/* STATUS */
+.status-box {
+width: 100%; padding: 1rem;
+border-radius: 12px; text-align: center;
+font-weight: 700; font-size: 1rem;
+animation: slideUp .3s ease;
+}
+.status-sent    { background:rgba(124,58,237,.2); border:1px solid var(–accent2); color:var(–accent2); }
+.status-correct { background:rgba(16,185,129,.2); border:1px solid var(–green); color:var(–green); }
+.status-wrong   { background:rgba(239,68,68,.2);  border:1px solid var(–red);   color:var(–red); }
+
+/* LEADERBOARD */
+.lb-list { width:100%; display:flex; flex-direction:column; gap:.6rem; }
+.lb-item {
+display:flex; align-items:center; gap:1rem;
+background:var(–surface); padding:1rem 1.2rem;
+border-radius:14px; border:1px solid rgba(255,255,255,.05);
+animation: slideUp .3s ease both;
+}
+.lb-item:nth-child(1) { border-color: rgba(245,158,11,.4); }
+.lb-item:nth-child(2) { border-color: rgba(148,163,184,.3); }
+.lb-item:nth-child(3) { border-color: rgba(180,83,9,.3); }
+.lb-rank { font-family:‘Syne’,sans-serif; font-size:1.3rem; font-weight:800; width:34px; }
+.lb-name { flex:1; font-weight:600; }
+.lb-score { font-family:‘Syne’,sans-serif; font-weight:700; color:var(–accent2); }
+
+.muted { color: var(–muted); text-align:center; font-size:.95rem; }
+</style>
+
 </head>
 <body>
-    <div id="stars"></div>
-    <div id="setup-screen" class="screen">
-        <h1 style="font-family:'Syne'; color:var(--gold); font-size: 2.2rem;">BRÛLE TON COSMOS</h1>
-        <input type="text" id="player-name" placeholder="Nom du Chevalier...">
-        <button class="btn-gold" onclick="joinGame()">REJOINDRE L'ARÈNE</button>
+<div class="wrap">
+
+  <!-- JOIN -->
+
+  <div class="screen active" id="s-join">
+    <div class="logo">⚡ Quiz SSA</div>
+    <p class="muted">Entre ton pseudo pour rejoindre</p>
+    <input type="text" id="pseudo" placeholder="Ton pseudo..." maxlength="20" autocomplete="off">
+    <button class="btn btn-primary" onclick="join()">Rejoindre 🚀</button>
+  </div>
+
+  <!-- WAITING -->
+
+  <div class="screen" id="s-waiting">
+    <div class="logo">⚡ Quiz SSA</div>
+    <p class="muted" id="w-name"></p>
+    <div class="card" style="text-align:center;">
+      <div class="pulse-ring"></div>
+      <h2 style="font-family:'Syne',sans-serif; margin-top:.5rem;">Tu es dans la salle !</h2>
+      <p class="muted" style="margin-top:.4rem;">En attente du début...</p>
+      <p class="muted" style="margin-top:.3rem; font-size:.85rem;" id="w-count"></p>
     </div>
-    <div id="wait-screen" class="screen" style="display:none;">
-        <div class="waiting-msg">Attente du Grand Pope...</div>
+  </div>
+
+  <!-- QUESTION -->
+
+  <div class="screen" id="s-question">
+    <div class="card">
+      <div class="q-header">
+        <span class="round-badge" id="q-round">Manche 1</span>
+        <span class="q-badge" id="q-index">Q1/10</span>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div class="choices" id="q-choices"></div>
     </div>
-    <div id="game-screen" class="screen" style="display:none;">
-        <h3 id="question-text" style="font-family:'Syne'; color:var(--gold); margin-bottom:20px;"></h3>
-        <div id="options-container" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
-    </div>
+    <div id="q-status"></div>
+  </div>
 
-    <script>
-        // Génération étoiles
-        const starContainer = document.getElementById('stars');
-        for(let i=0; i<50; i++){
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.width = star.style.height = Math.random() * 3 + 'px';
-            starContainer.appendChild(star);
-        }
+  <!-- LEADERBOARD -->
 
-        let ws;
-        let myName = "";
+  <div class="screen" id="s-leaderboard">
+    <h2 style="font-family:'Syne',sans-serif; font-size:1.6rem;">🏆 Classement</h2>
+    <p class="muted" id="lb-round"></p>
+    <div class="lb-list" id="lb-list"></div>
+  </div>
 
-        function joinGame() {
-            myName = document.getElementById('player-name').value;
-            if(!myName) return;
-            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${location.host}`);
-            
-            ws.onopen = () => {
-                // On envoie 'join' ET 'name' pour être sûr de couvrir tous les types de serveurs
-                ws.send(JSON.stringify({ type: 'join', name: myName, playerName: myName }));
-                document.getElementById('setup-screen').style.display = 'none';
-                document.getElementById('wait-screen').style.display = 'flex';
-            };
+  <!-- END -->
 
-            ws.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                // Si on reçoit une question ou une phase de jeu
-                if (data.type === 'question' || data.text) {
-                    document.getElementById('wait-screen').style.display = 'none';
-                    document.getElementById('game-screen').style.display = 'flex';
-                    document.getElementById('question-text').textContent = data.text || data.question.text;
-                    const container = document.getElementById('options-container');
-                    container.innerHTML = "";
-                    const opts = data.options || (data.question ? data.question.options : []);
-                    opts.forEach(opt => {
-                        const btn = document.createElement('button');
-                        btn.className = 'opt-btn'; btn.textContent = opt;
-                        btn.onclick = () => {
-                            ws.send(JSON.stringify({ type: 'answer', answer: opt, name: myName, playerName: myName }));
-                            container.innerHTML = "<p style='color:var(--gold)'>ATTAQUE ENVOYÉE !</p>";
-                        };
-                        container.appendChild(btn);
-                    });
-                }
-                // Retour à l'attente
-                if (data.type === 'phase_change' && (data.phase === 'wait' || data.phase === 'round_intro')) {
-                    document.getElementById('game-screen').style.display = 'none';
-                    document.getElementById('wait-screen').style.display = 'flex';
-                }
-            };
-        }
-    </script>
+  <div class="screen" id="s-end">
+    <div class="logo">🎉 Fin !</div>
+    <h2 style="font-family:'Syne',sans-serif; text-align:center;">Classement final</h2>
+    <div class="lb-list" id="end-list"></div>
+  </div>
+
+</div>
+
+<script>
+  let ws, myName, myAnswer = null;
+
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('s-' + id).classList.add('active');
+  }
+
+  function join() {
+    const name = document.getElementById('pseudo').value.trim();
+    if (!name) return;
+    myName = name;
+    connect();
+  }
+
+  document.getElementById('pseudo').addEventListener('keydown', e => {
+    if (e.key === 'Enter') join();
+  });
+
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${location.host}`);
+
+    ws.onopen = () => ws.send(JSON.stringify({ type: 'join', name: myName }));
+    ws.onmessage = e => handle(JSON.parse(e.data));
+    ws.onclose = () => { if (myName) setTimeout(connect, 2000); };
+  }
+
+  function handle(d) {
+    switch (d.type) {
+
+      case 'joined':
+        document.getElementById('w-name').textContent = '👤 ' + myName;
+        show('waiting');
+        break;
+
+      case 'player_count':
+        document.getElementById('w-count').textContent = d.count + ' joueur(s) connecté(s)';
+        break;
+
+      case 'game_started':
+        show('waiting');
+        break;
+
+      case 'question':
+        myAnswer = null;
+        document.getElementById('q-round').textContent = `Manche ${d.roundIndex} — ${d.round}`;
+        document.getElementById('q-index').textContent = `Q${d.index}/${d.total}`;
+        document.getElementById('q-text').textContent = d.question;
+        document.getElementById('q-status').innerHTML = '';
+
+        const letters = ['A','B','C','D','E'];
+        document.getElementById('q-choices').innerHTML = d.choices.map((c, i) =>
+          `<button class="choice" onclick="answer(this,'${c.replace(/'/g,"\\'")}')" id="c${i}">
+            <span class="letter">${letters[i]}.</span> ${c}
+          </button>`
+        ).join('');
+        show('question');
+        break;
+
+      case 'answer_ok':
+        document.getElementById('q-status').innerHTML =
+          `<div class="status-box status-sent">✓ Réponse envoyée ! En attente...</div>`;
+        break;
+
+      case 'answer_revealed':
+        // Colorie les boutons
+        document.querySelectorAll('.choice').forEach(btn => {
+          const txt = btn.textContent.trim().replace(/^[A-E]\.\s*/, '');
+          btn.classList.add('locked');
+          if (txt === d.correct) btn.classList.add('correct');
+          else if (btn.classList.contains('selected')) btn.classList.add('wrong');
+        });
+        const isCorrect = myAnswer === d.correct;
+        document.getElementById('q-status').innerHTML =
+          `<div class="status-box ${isCorrect ? 'status-correct' : 'status-wrong'}">
+            ${isCorrect ? '🎉 Bonne réponse ! +100 pts' : `❌ C'était : ${d.correct}`}
+          </div>`;
+        break;
+
+      case 'leaderboard':
+        renderLb(d.leaderboard, 'lb-list');
+        document.getElementById('lb-round').textContent =
+          d.round < 5 ? `Après la manche ${d.round}` : 'Classement final';
+        show('leaderboard');
+        break;
+
+      case 'game_end':
+        renderLb(d.leaderboard, 'end-list');
+        show('end');
+        break;
+    }
+  }
+
+  function answer(btn, value) {
+    if (myAnswer) return;
+    myAnswer = value;
+    document.querySelectorAll('.choice').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    ws.send(JSON.stringify({ type: 'answer', answer: value }));
+  }
+
+  function renderLb(lb, containerId) {
+    const medals = ['🥇','🥈','🥉'];
+    document.getElementById(containerId).innerHTML = lb.map((p, i) =>
+      `<div class="lb-item" style="animation-delay:${i*0.07}s">
+        <span class="lb-rank">${medals[i] || (i+1)}</span>
+        <span class="lb-name">${p.name}</span>
+        <span class="lb-score">${p.score} pts</span>
+      </div>`
+    ).join('');
+  }
+</script>
+
 </body>
 </html>
