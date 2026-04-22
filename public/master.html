@@ -1,260 +1,111 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Master Panel — Gestion Totale</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  :root { --bg: #080810; --surface: #10101a; --surface2: #18182a; --accent: #7c3aed; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; --border: rgba(255,255,255,.06); }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100vh; overflow: hidden; display: grid; grid-template-columns: 320px 1fr; }
-  
-  /* Auth */
-  #auth-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:10000; display:flex; align-items:center; justify-content:center; }
-  .auth-box { background:var(--surface); padding:2rem; border-radius:20px; border:1px solid var(--accent); text-align:center; width:320px; }
-
-  /* Layout */
-  .sidebar { background:var(--surface); border-right:1px solid var(--border); padding:1rem; display:flex; flex-direction:column; gap:1rem; overflow-y: auto; }
-  .panel { background:var(--surface2); border-radius:12px; padding:1rem; border:1px solid var(--border); margin-bottom: 1rem; }
-  
-  .btn { padding:.7rem 1rem; border-radius:10px; border:none; font-weight:700; font-family:'Syne'; cursor:pointer; color: white; transition: 0.2s; }
-  .btn:active { transform: scale(0.98); }
-  .btn-primary { background:var(--accent); width: 100%; }
-  .btn-gold { background:var(--gold); color:#000; }
-  .btn-pause { background: #3b82f6; }
-
-  /* Tabs & Lists */
-  .round-tab { padding:.5rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-size:.8rem; margin-bottom: 5px; text-align: center; }
-  .round-tab.active { border-color:var(--gold); color:var(--gold); background: rgba(245, 158, 11, 0.1); }
-  
-  .player-tag { display: inline-block; padding: 4px 10px; background: #222; border-radius: 6px; margin: 3px; font-size: 0.8rem; color: var(--gold); border: 1px solid rgba(245,158,11,0.2); }
-  .answer-item { padding: 0.6rem; background: var(--bg); border-radius: 8px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; }
-
-  /* Editeur de questions */
-  input, textarea { background:var(--bg); border:1px solid var(--border); color:white; padding:0.8rem; border-radius:8px; width:100%; margin-bottom:0.8rem; outline:none; font-family: inherit; }
-  .q-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; position: relative; }
-  .q-number { position: absolute; top: -10px; left: -10px; background: var(--accent); width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <title>Master Panel — Détection Chevaliers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #080810; --gold: #f59e0b; --accent: #7c3aed; }
+        body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns: 300px 1fr; height:100vh; }
+        
+        /* Sidebar avec liste des joueurs bien visible */
+        .sidebar { background:#10101a; border-right:2px solid var(--accent); padding:20px; display:flex; flex-direction:column; }
+        .player-card { background:#1a1a2e; border:1px solid #333; padding:10px; margin-bottom:8px; border-radius:8px; color:var(--gold); font-weight:bold; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        .main { padding:30px; }
+        .status-badge { display:inline-block; padding:5px 12px; border-radius:20px; font-size:0.8rem; margin-bottom:20px; border:1px solid #333; }
+        .online { color:#10b981; border-color:#10b981; }
+        
+        .btn { padding:12px 24px; border-radius:10px; border:none; font-weight:bold; cursor:pointer; color:white; font-family:'Syne'; }
+        .btn-start { background:var(--accent); }
+    </style>
 </head>
 <body>
 
-  <div id="auth-screen">
-      <div class="auth-box">
-          <h2 style="font-family:'Syne'; margin-bottom:1.5rem; color:var(--gold);">MAÎTRE DU JEU</h2>
-          <input type="password" id="admin-password" placeholder="Mot de passe secret...">
-          <button class="btn btn-primary" onclick="checkAuth()">S'ÉVEILLER</button>
-      </div>
-  </div>
-
-  <div class="sidebar">
-    <div class="panel">
-      <h3 style="font-size:0.7rem; color:var(--gold); text-transform:uppercase; margin-bottom: 0.5rem;">👥 CHEVALIERS (<span id="p-count">0</span>)</h3>
-      <div id="player-list"></div>
+<div class="sidebar">
+    <h2 style="font-family:'Syne'; color:var(--gold); margin-top:0;">👥 PRÉSENTS (<span id="count">0</span>)</h2>
+    <div id="player-list">
+        <p style="color:#64748b; font-size:0.9rem;">En attente de connexion...</p>
     </div>
+</div>
 
-    <div class="panel" style="flex:1;">
-      <h3 style="font-size:0.7rem; color:var(--muted); text-transform:uppercase; margin-bottom: 0.5rem;">💬 FLUX RÉPONSES</h3>
-      <div id="answer-feed"></div>
+<div class="main">
+    <div id="status" class="status-badge">🔴 DÉCONNECTÉ DU SERVEUR</div>
+    
+    <h1 style="font-family:'Syne'; margin-bottom:10px;">CONTRÔLE DU TOURNOI</h1>
+    <p style="color:#64748b; margin-bottom:30px;">Vérifie que tous tes chevaliers sont dans la liste à gauche avant de lancer.</p>
+
+    <button class="btn btn-start" onclick="startGame()">🚀 LANCER LE JEU POUR TOUS</button>
+    
+    <div style="margin-top:50px; padding:20px; background:#161625; border-radius:15px; border:1px dashed #444;">
+        <h3 style="color:var(--gold)">Aide au dépannage :</h3>
+        <ul style="font-size:0.9rem; color:#94a3b8; line-height:1.6;">
+            <li>1. Ouvre ta page Joueur sur ton téléphone.</li>
+            <li>2. Entre un pseudo et valide.</li>
+            <li>3. Si le nom n'apparaît pas à gauche, rafraîchis cette page (Master).</li>
+        </ul>
     </div>
-
-    <div class="panel" style="background: #1a0a2e; border-color: var(--gold);">
-      <h3 style="font-size:0.7rem; color:var(--gold);">🏆 CLASSEMENT FINAL</h3>
-      <div id="top-5-list" style="font-size:0.85rem; margin: 0.8rem 0; color: white;"></div>
-      <button onclick="updateLeaderboard()" class="btn" style="width:100%; font-size:0.7rem; background:rgba(255,255,255,0.1)">CALCULER LE TOP 5</button>
-    </div>
-  </div>
-
-  <div style="padding:1.5rem; overflow-y: auto;">
-    <div style="display:flex; gap:1rem; margin-bottom:2rem; align-items: center;">
-      <button class="btn btn-primary" style="width:auto" onclick="startGame()">🚀 START GAME</button>
-      <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
-      <button class="btn btn-gold" id="btn-start-round" onclick="startRound()" style="display:none;">⚔️ LANCER MANCHE</button>
-      <button class="btn btn-gold" id="btn-next" onclick="nextQuestion()" style="display:none;">⏭ QUESTION SUIVANTE</button>
-      <div id="timer-ui" style="display:none; font-size:2.5rem; font-family:'Syne'; font-weight:800; margin-left: auto; color: var(--gold);">30</div>
-    </div>
-
-    <div id="rounds-tabs" style="display:flex; gap:10px; margin-bottom:2rem;"></div>
-
-    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 1.5rem;">
-      <div>
-        <h2 id="round-title" style="font-family:'Syne'; color:var(--gold); margin-bottom:1.5rem;">Manche 1</h2>
-        <div id="questions-display"></div>
-      </div>
-
-      <div class="panel" style="position: sticky; top: 0; height: fit-content;">
-        <h3 style="font-family:'Syne'; font-size:0.9rem; margin-bottom:1rem; color: var(--accent);">➕ AJOUTER UNE QUESTION</h3>
-        <input type="text" id="q-input" placeholder="Ta question...">
-        <input type="text" id="r1" placeholder="Réponse 1 (La bonne)">
-        <input type="text" id="r2" placeholder="Réponse 2">
-        <input type="text" id="r3" placeholder="Réponse 3">
-        <input type="text" id="r4" placeholder="Réponse 4">
-        <button class="btn btn-primary" onclick="addQuestion()">ENREGISTRER</button>
-      </div>
-    </div>
-  </div>
-
-<audio id="buzzer-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3"></audio>
+</div>
 
 <script>
-let ws;
-let activeRound = 0;
-let answersReceived = 0;
-let scores = {};
-let isPaused = false;
+    let ws;
+    let players = new Set(); // Pour éviter les doublons
 
-// On initialise les questions par manche
-let allQuestions = [[], [], [], [], []];
+    function connect() {
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${location.host}`);
 
-const rounds = [
-  { name: "L'Éveil de Seiya", timer: 30 },
-  { name: "La Fureur d'Ikki", timer: 30 },
-  { name: "Le Jugement de Saga", timer: 30 },
-  { name: "La Malédiction d'Hadès", timer: 35 },
-  { name: "Le Cosmos d'Athéna", timer: 40 }
-];
+        ws.onopen = () => {
+            document.getElementById('status').textContent = "🟢 SERVEUR CONNECTÉ";
+            document.getElementById('status').className = "status-badge online";
+            // On demande la liste dès la connexion
+            ws.send(JSON.stringify({ type: 'get_players' }));
+        };
 
-function checkAuth() {
-    const pwd = document.getElementById('admin-password').value;
-    if(pwd) connect(pwd);
-}
+        ws.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            console.log("Reçu du serveur:", data); // Pour debug dans la console
 
-function connect(password) {
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${location.host}`);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'master_auth', password: password }));
-    
-    ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        
-        if(data.type === 'master_auth_ok') {
-            document.getElementById('auth-screen').style.display = 'none';
-            renderTabs();
-            renderQuestions();
-        }
-
-        if(data.type === 'player_list' || data.type === 'new_player') {
-            // Note : Certains serveurs envoient data.players, d'autres data.name
-            const list = data.players || [];
-            document.getElementById('p-count').textContent = list.length;
-            document.getElementById('player-list').innerHTML = list.map(p => `<span class="player-tag">${p.name}</span>`).join('');
-        }
-
-        if(data.type === 'answer_update') {
-            document.getElementById('buzzer-sound').play();
-            answersReceived++;
-            let pts = 1; 
-            if(answersReceived === 1) pts += 3;
-            if(answersReceived === 2) pts += 2;
-            if(answersReceived === 3) pts += 1;
-            if(!scores[data.playerName]) scores[data.playerName] = 0;
-            scores[data.playerName] += pts;
-            const div = document.createElement('div');
-            div.className = 'answer-item';
-            div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts} pts</span>`;
-            document.getElementById('answer-feed').prepend(div);
-        }
-        
-        if(data.type === 'phase_change') {
-            if(data.phase === 'question') {
-                answersReceived = 0; document.getElementById('answer-feed').innerHTML = "";
-                startTimer(data.timer || rounds[activeRound].timer);
+            // CAS 1 : Le serveur envoie une liste complète
+            if (data.type === 'player_list') {
+                data.players.forEach(p => players.add(p.name));
+                updateUI();
             }
-            document.getElementById('btn-next').style.display = (data.phase === 'question') ? 'block' : 'none';
-            document.getElementById('btn-start-round').style.display = (data.phase === 'round_intro') ? 'block' : 'none';
-            document.getElementById('timer-ui').style.display = (data.phase === 'question') ? 'block' : 'none';
-            if(data.phase === 'round_intro') {
-              document.getElementById('round-title').textContent = data.roundName;
+
+            // CAS 2 : Un nouveau joueur vient de se connecter
+            if (data.type === 'new_player' || data.type === 'join') {
+                players.add(data.name || data.playerName);
+                updateUI();
             }
-        }
-    };
-}
+        };
 
-// GESTION DES QUESTIONS
-function addQuestion() {
-  const text = document.getElementById('q-input').value;
-  const options = [
-    document.getElementById('r1').value,
-    document.getElementById('r2').value,
-    document.getElementById('r3').value,
-    document.getElementById('r4').value
-  ];
-
-  if(!text || !options[0]) return alert("Remplis au moins la question et la bonne réponse !");
-
-  allQuestions[activeRound].push({ text, options });
-  
-  // On vide le formulaire
-  document.getElementById('q-input').value = "";
-  document.getElementById('r1').value = "";
-  document.getElementById('r2').value = "";
-  document.getElementById('r3').value = "";
-  document.getElementById('r4').value = "";
-
-  renderQuestions();
-  
-  // ENVOI AU SERVEUR (Pour que le serveur connaisse la question)
-  ws.send(JSON.stringify({ 
-    type: 'admin_add_question', 
-    roundIndex: activeRound, 
-    question: { text, options } 
-  }));
-}
-
-function renderQuestions() {
-  const container = document.getElementById('questions-display');
-  const qs = allQuestions[activeRound];
-  if(qs.length === 0) {
-    container.innerHTML = "<p style='color:var(--muted)'>Aucune question dans cette manche.</p>";
-    return;
-  }
-  container.innerHTML = qs.map((q, i) => `
-    <div class="q-card">
-      <div class="q-number">${i+1}</div>
-      <div style="font-weight:bold; margin-bottom:0.5rem;">${q.text}</div>
-      <div style="font-size:0.8rem; color:var(--gold)">✅ ${q.options[0]}</div>
-      <div style="font-size:0.8rem; opacity:0.6;">❌ ${q.options.slice(1).join(' | ')}</div>
-    </div>
-  `).join('');
-}
-
-function renderTabs() {
-  document.getElementById('rounds-tabs').innerHTML = rounds.map((r, i) => `
-    <div class="round-tab ${i === activeRound ? 'active' : ''}" style="flex:1" onclick="activeRound=${i}; renderTabs(); renderQuestions();">
-      ${r.name}
-    </div>
-  `).join('');
-  document.getElementById('round-title').textContent = rounds[activeRound].name;
-}
-
-// AUTRES FONCTIONS
-function togglePause() {
-    isPaused = !isPaused;
-    const btn = document.getElementById('btn-pause');
-    if(isPaused) {
-      btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE";
-      ws.send(JSON.stringify({ type: 'master_pause_on' }));
-    } else {
-      btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI";
-      ws.send(JSON.stringify({ type: 'master_pause_off' }));
+        ws.onclose = () => {
+            document.getElementById('status').textContent = "🔴 CONNEXION PERDUE";
+            document.getElementById('status').className = "status-badge";
+            setTimeout(connect, 2000); // Reconnexion automatique
+        };
     }
-}
 
-function updateLeaderboard() {
-    const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
-    document.getElementById('top-5-list').innerHTML = sorted.map(([n, s], i) => `
-      <div style="margin-bottom:5px;"><b>${i+1}. ${n}</b> — ${s} pts</div>
-    `).join('');
-}
+    function updateUI() {
+        const listDiv = document.getElementById('player-list');
+        const countSpan = document.getElementById('count');
+        
+        if (players.size === 0) {
+            listDiv.innerHTML = "<p style='color:#64748b;'>Aucun joueur...</p>";
+        } else {
+            listDiv.innerHTML = Array.from(players).map(name => `
+                <div class="player-card">🛡️ ${name}</div>
+            `).join('');
+        }
+        countSpan.textContent = players.size;
+    }
 
-function startTimer(sec) {
-    let t = sec; const el = document.getElementById('timer-ui');
-    const int = setInterval(() => { t--; el.textContent = Math.max(0, t); if(t <= 0) clearInterval(int); }, 1000);
-}
+    function startGame() {
+        ws.send(JSON.stringify({ type: 'master_start_game' }));
+    }
 
-function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
-function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
-function startRound() { ws.send(JSON.stringify({ type: 'master_start_round' })); }
-
+    connect();
 </script>
 </body>
 </html>
