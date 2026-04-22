@@ -2,90 +2,116 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Master Panel — Podium & Pause</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question pour un Impérien — Joueur</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #080810; --surface: #10101a; --accent: #7c3aed; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; }
-        body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns:350px 1fr; height:100vh; overflow:hidden; }
-        .sidebar { background:var(--surface); padding:1.5rem; border-right:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; }
-        #answer-feed { flex: 1; overflow-y: auto; margin-bottom: 1rem; }
-        .final-leaderboard { background: #1a1a2e; border-top: 2px solid var(--gold); padding: 1rem; border-radius: 10px 10px 0 0; }
-        .answer-item { padding:0.8rem; border-radius:10px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; background: #161625; border-left: 4px solid var(--accent); }
-        .main { padding:2rem; overflow-y: auto; }
-        .btn { padding:0.8rem 1.2rem; border-radius:12px; border:none; font-weight:800; cursor:pointer; font-family:'Syne'; color:white; margin-right:0.5rem; }
-        .btn-pause { background: #3b82f6; }
-        .btn-next { background: var(--gold); color: black; }
-        #timer-display { font-size: 5rem; font-family:'Syne'; font-weight:800; margin: 1rem 0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
+
+        /* Animation Cosmos en fond */
+        .cosmos-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #1a0a2e 0%, #080810 100%); overflow: hidden; }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle var(--d) infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        #setup-screen, #wait-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
+        
+        /* Message d'attente stylé */
+        .waiting-msg { font-family: 'Syne'; font-size: 1.5rem; color: var(--gold); text-transform: uppercase; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        #round-transition { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .round-title-anim { font-family: 'Syne'; font-size: 2.2rem; font-weight: 800; color: var(--gold); animation: cosmosZoom 3s forwards; }
+        @keyframes cosmosZoom { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1.1); opacity: 1; } }
+
+        #game-screen { display: none; padding: 1.5rem; height: 100vh; flex-direction: column; }
+        .question-box { background: rgba(16, 16, 26, 0.8); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--accent); margin-bottom: 2rem; }
+        .options-grid { display: grid; gap: 1rem; width: 100%; }
+        .opt-btn { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 1.2rem; border-radius: 15px; font-weight: 700; cursor: pointer; }
+        .opt-btn.selected { background: var(--accent); border-color: var(--gold); }
+        .btn-join { background: linear-gradient(135deg, var(--accent), #a855f7); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 1rem; }
+        input { background: var(--surface); border: 1px solid var(--accent); color: white; padding: 1rem; border-radius: 12px; width: 100%; text-align: center; margin-bottom: 1rem; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2 style="font-family:'Syne'; color:var(--gold);">⚡ RÉPONSES</h2>
-        <div id="answer-feed"></div>
-        <div class="final-leaderboard">
-            <h3 style="font-family:'Syne'; font-size: 0.9rem; margin-bottom:0.5rem;">🏆 TOP 5 SECRET</h3>
-            <div id="top-5-list" style="font-size: 0.85rem; margin-bottom:10px;"><p style="color:var(--muted)">Aucun score...</p></div>
-            <button onclick="updateLeaderboard()" style="width:100%; background:none; border:1px solid var(--gold); color:var(--gold); cursor:pointer; padding:5px; border-radius:4px;">Calculer le Top 5</button>
+    <div class="cosmos-bg" id="stars"></div>
+    <div id="round-transition"><div id="round-anim-name" class="round-title-anim"></div></div>
+
+    <div id="setup-screen">
+        <h1 style="font-family:'Syne'; margin-bottom: 2rem;">ENTRER DANS L'ARÈNE</h1>
+        <input type="text" id="player-name" placeholder="Ton pseudo de Chevalier...">
+        <button class="btn-join" onclick="joinGame()">ÉVEILLER MON COSMOS</button>
+    </div>
+
+    <div id="wait-screen" style="display:none;">
+        <div id="wait-content">
+            <div class="waiting-msg">Méditation en cours...</div>
+            <p style="margin-top:1rem; color:var(--muted)">Le Grand Pope va bientôt lancer le tournoi.</p>
         </div>
     </div>
-    <div class="main">
-        <div style="margin-bottom:2rem;">
-            <button class="btn" style="background:var(--accent)" onclick="startGame()">🚀 START</button>
-            <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
-            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" style="display:none;">SUIVANT ⏭️</button>
-            <button class="btn btn-next" id="btn-start-round" onclick="startRound()" style="display:none;">LANCER MANCHE ⚔️</button>
-        </div>
-        <div id="timer-display">--</div>
-        <div id="round-name" style="color:var(--gold); font-family:'Syne'; font-size:1.5rem;">MANCHE 1</div>
+
+    <div id="game-screen">
+        <div class="question-box"><div id="question-text" style="font-family:'Syne'; font-size:1.2rem;">Attente...</div></div>
+        <div id="options-container" class="options-grid"></div>
     </div>
-    <audio id="buzzer-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3"></audio>
 
     <script>
-        let ws; let answersReceived = 0; let scores = {}; let isPaused = false;
-        function connect() {
+        // Création des étoiles
+        const container = document.getElementById('stars');
+        for(let i=0; i<50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = star.style.height = Math.random()*3+'px';
+            star.style.left = Math.random()*100+'%';
+            star.style.top = Math.random()*100+'%';
+            star.style.setProperty('--d', Math.random()*3+2+'s');
+            container.appendChild(star);
+        }
+
+        let ws; let myName = "";
+        function joinGame() {
+            myName = document.getElementById('player-name').value;
+            if(!myName) return;
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}`);
+            ws.onopen = () => { 
+                ws.send(JSON.stringify({ type: 'join', name: myName })); 
+                document.getElementById('setup-screen').style.display = 'none'; 
+                document.getElementById('wait-screen').style.display = 'flex'; 
+            };
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
-                if(data.type === 'answer_update') {
-                    document.getElementById('buzzer-sound').play();
-                    answersReceived++;
-                    let pts = 1; 
-                    if(answersReceived === 1) pts += 3;
-                    if(answersReceived === 2) pts += 2;
-                    if(answersReceived === 3) pts += 1;
-                    if(!scores[data.playerName]) scores[data.playerName] = 0;
-                    scores[data.playerName] += pts;
-                    const div = document.createElement('div'); div.className = 'answer-item';
-                    div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts}</span>`;
-                    document.getElementById('answer-feed').prepend(div);
+                const waitContent = document.getElementById('wait-content');
+                if (data.type === 'pause_on') { 
+                    document.getElementById('game-screen').style.display = 'none'; document.getElementById('wait-screen').style.display = 'flex';
+                    waitContent.innerHTML = `<h2 style="color:var(--gold)">⏸️ PAUSE PIPI</h2><div style="font-size:3rem; margin-top:1rem;">☕🚽</div>`;
                 }
-                if(data.type === 'phase_change') {
-                    if(data.phase === 'question') { answersReceived = 0; document.getElementById('answer-feed').innerHTML = ""; startTimer(data.timer || 30); }
-                    if(data.phase === 'round_intro') { document.getElementById('round-name').textContent = data.roundName; }
-                    document.getElementById('btn-next').style.display = (data.phase === 'question') ? 'inline-block' : 'none';
-                    document.getElementById('btn-start-round').style.display = (data.phase === 'round_intro') ? 'inline-block' : 'none';
+                if (data.type === 'pause_off') { 
+                    waitContent.innerHTML = `<div class="waiting-msg">Reprise imminente...</div>`;
                 }
+                if (data.type === 'phase_change' && data.phase === 'round_intro') { showRoundAnim(data.roundName); }
+                if (data.type === 'question') { showQuestion(data); }
+                if (data.type === 'phase_change' && data.phase === 'wait') { document.getElementById('game-screen').style.display = 'none'; document.getElementById('wait-screen').style.display = 'flex'; }
             };
         }
-        function togglePause() {
-            isPaused = !isPaused;
-            const btn = document.getElementById('btn-pause');
-            if(isPaused) { btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE"; ws.send(JSON.stringify({ type: 'master_pause_on' })); }
-            else { btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI"; ws.send(JSON.stringify({ type: 'master_pause_off' })); }
+        function showRoundAnim(name) {
+            const trans = document.getElementById('round-transition');
+            document.getElementById('round-anim-name').textContent = name;
+            trans.style.display = 'flex'; setTimeout(() => { trans.style.display = 'none'; }, 3000);
         }
-        function updateLeaderboard() {
-            const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
-            document.getElementById('top-5-list').innerHTML = sorted.map(([name, score], i) => `<div>${i+1}. <b>${name}</b> — ${score} pts</div>`).join('');
+        function showQuestion(data) {
+            document.getElementById('wait-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            document.getElementById('question-text').textContent = data.text;
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+            data.options.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.textContent = opt;
+                btn.onclick = () => { Array.from(container.children).forEach(b => b.style.opacity = "0.5"); btn.style.opacity = "1"; btn.classList.add('selected'); ws.send(JSON.stringify({ type: 'answer', answer: opt })); };
+                container.appendChild(btn);
+            });
         }
-        function startTimer(sec) {
-            let t = sec; const el = document.getElementById('timer-display');
-            const count = setInterval(() => { t--; el.textContent = Math.max(0, t); if(t <= 0) clearInterval(count); }, 1000);
-        }
-        function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
-        function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
-        function startRound() { ws.send(JSON.stringify({ type: 'master_start_round' })); }
-        connect();
     </script>
 </body>
 </html>
