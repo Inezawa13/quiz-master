@@ -2,369 +2,164 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Question pour un Impérien</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question pour un Impérien — Joueur</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0f;
-            --surface: #13131a;
-            --surface2: #1c1c27;
-            --accent: #7c3aed;
-            --accent2: #a855f7;
-            --gold: #f59e0b;
-            --green: #10b981;
-            --red: #ef4444;
-            --text: #f8fafc;
-            --muted: #64748b;
+            --bg: #080810; --surface: #10101a; --accent: #7c3aed; 
+            --gold: #f59e0b; --text: #f8fafc; --muted: #64748b;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: 'DM Sans', sans-serif; overflow: hidden; 
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background: url('https://i.ibb.co/7df8SnSh/IMG-0301.jpg') center/cover fixed, var(--bg);
-            color: var(--text);
-            font-family: 'DM Sans', sans-serif;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            overflow-x: hidden;
+        /* ÉCRAN D'ATTENTE / AUTH */
+        #setup-screen, #wait-screen {
+            height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 2rem; text-align: center;
         }
 
-        h1, h2, h3 { font-family: 'Syne', sans-serif; }
-
-        .screen { width: 100%; max-width: 420px; display: none; flex-direction: column; align-items: center; gap: 1.5rem; }
-        .screen.active { display: flex; animation: fadeUp .4s ease; }
-
-        @keyframes fadeUp { 
-            from { opacity:0; transform:translateY(20px); } 
-            to { opacity:1; transform:translateY(0); } 
+        /* ANIMATION DE TRANSITION DE MANCHE */
+        #round-transition {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #1a0a2e 0%, #080810 100%);
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 9999; text-align: center;
+        }
+        .round-title-anim {
+            font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800;
+            color: var(--gold); text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+            animation: cosmosZoom 3s forwards ease-in-out;
+        }
+        @keyframes cosmosZoom {
+            0% { transform: scale(0.5); opacity: 0; filter: blur(10px); }
+            30% { transform: scale(1.1); opacity: 1; filter: blur(0px); }
+            70% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.2); opacity: 0; filter: blur(5px); }
         }
 
-        .logo {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(1.2rem, 4vw, 1.6rem);
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent2), var(--gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            width: 100%;
-            word-break: break-word;
-            line-height: 1.3;
-            padding: 0 0.5rem;
+        /* ÉCRAN DE JEU */
+        #game-screen { display: none; padding: 1.5rem; height: 100vh; flex-direction: column; }
+        .question-box { background: var(--surface); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; }
+        .q-text { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 1rem; }
+        
+        .options-grid { display: grid; gap: 1rem; width: 100%; }
+        .opt-btn { 
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 1.2rem; border-radius: 15px; font-weight: 700;
+            font-size: 1rem; cursor: pointer; transition: 0.2s;
         }
+        .opt-btn:active { transform: scale(0.95); background: var(--accent); }
+        .opt-btn.selected { background: var(--accent); border-color: var(--gold); }
 
-        input[type="text"] { 
-            width: 100%; 
-            padding: 1rem 1.2rem; 
-            border-radius: 14px; 
-            background: var(--surface2); 
-            border: 2px solid transparent; 
-            color: var(--text); 
-            font-size: 1.1rem; 
-            font-family: 'DM Sans', sans-serif; 
-            outline: none; 
-            transition: border .2s; 
+        .btn-join { 
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            color: white; border: none; padding: 1rem 2rem; 
+            border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 1rem;
         }
-
-        input:focus { border-color: var(--accent2); }
-
-        .btn-cosmos {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 14px;
-            border: none;
-            font-size: 1.1rem;
-            font-weight: 700;
-            font-family: 'Syne', sans-serif;
-            cursor: pointer;
-            transition: all .3s;
-            background: linear-gradient(135deg, #f59e0b, #ef4444, #7c3aed);
-            background-size: 200% 200%;
-            color: white;
-            letter-spacing: .05em;
-            animation: cosmosGlow 3s ease infinite;
-            box-shadow: 0 0 20px rgba(245,158,11,0.3);
+        input { 
+            background: var(--surface); border: 1px solid var(--accent);
+            color: white; padding: 1rem; border-radius: 12px; width: 100%; max-width: 300px;
+            text-align: center; margin-bottom: 1rem; outline: none;
         }
-
-        .btn-cosmos:active { transform: scale(0.97); }
-
-        @keyframes cosmosGlow {
-            0%,100% { background-position: 0% 50%; box-shadow: 0 0 20px rgba(245,158,11,0.3); }
-            50% { background-position: 100% 50%; box-shadow: 0 0 30px rgba(168,85,247,0.5); }
-        }
-
-        .waiting-card { 
-            background: var(--surface); 
-            border-radius: 20px; 
-            padding: 2rem; 
-            text-align: center; 
-            width: 100%; 
-            border: 1px solid rgba(124,58,237,0.3); 
-        }
-
-        .pulse { 
-            width: 60px; height: 60px; border-radius: 50%; 
-            background: var(--accent); 
-            margin: 1rem auto; 
-            animation: pulse 1.5s infinite; 
-        }
-
-        @keyframes pulse { 
-            0%,100%{transform:scale(1);opacity:1;} 
-            50%{transform:scale(1.15);opacity:0.7;} 
-        }
-
-        .round-card { background: var(--surface); border-radius: 20px; padding: 2rem; text-align: center; width: 100%; border: 1px solid rgba(245,158,11,0.3); }
-        .round-number { font-size: .85rem; color: var(--gold); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
-        .round-name { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: .5rem; }
-        .round-progress { display: flex; gap: .4rem; justify-content: center; margin-top: 1rem; }
-        .round-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--surface2); border: 2px solid var(--muted); }
-        .round-dot.active { background: var(--gold); border-color: var(--gold); }
-        .round-dot.done { background: var(--accent2); border-color: var(--accent2); }
-
-        .question-card {
-            background: rgba(19, 19, 26, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 20px;
-            padding: 1.5rem;
-            width: 100%;
-            border: 1px solid rgba(168,85,247,0.2);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        }
-
-        .choices { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
-
-        .choice-btn {
-            padding: 1rem 1.2rem;
-            border-radius: 12px;
-            border: 2px solid rgba(255,255,255,0.1);
-            background: rgba(28, 28, 39, 0.9);
-            color: var(--text);
-            font-size: 1rem;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .choice-btn.selected { border-color: var(--accent2); background: rgba(124,58,237,0.2); }
-        .choice-btn.correct { border-color: var(--green); background: rgba(16,185,129,0.2); }
-        .choice-btn.wrong { border-color: var(--red); background: rgba(239,68,68,0.2); }
-
-        .timer-bar-bg { width: 100%; height: 8px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
-        .timer-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s linear; }
-        .timer-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; }
-        .timer-text.danger { color: var(--red); animation: shake 0.3s infinite; }
-
-        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-3px);} 75%{transform:translateX(3px);} }
-
-        .leaderboard { width: 100%; display: flex; flex-direction: column; gap: 0.75rem; }
-        .lb-item { display: flex; align-items: center; gap: 1rem; background: var(--surface); padding: 1rem 1.2rem; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
-        .lb-rank { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; width: 30px; }
-        .lb-rank.gold { color: var(--gold); }
-        .lb-score { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent2); }
-
-        .pause-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 999; flex-direction: column; gap: 1rem; }
-        .pause-overlay.active { display: flex; }
     </style>
 </head>
 <body>
 
-<div class="pause-overlay" id="pause-overlay">
-    <h2>⏸️ Pause</h2>
-    <p>Le maître reprendra bientôt...</p>
-</div>
-
-<div class="screen active" id="screen-join">
-    <div class="logo">⚔️ Question pour un Impérien</div>
-    <p style="color:var(--muted);text-align:center;">Entre ton pseudo pour rejoindre</p>
-    <input type="text" id="pseudo-input" placeholder="Ton pseudo..." maxlength="20" autocomplete="off">
-    <button class="btn-cosmos" onclick="joinGame()">⚡ Éveiller mon Cosmos</button>
-</div>
-
-<div class="screen" id="screen-waiting">
-    <div class="logo">⚔️ Question pour un Impérien</div>
-    <div id="player-name-display" style="text-align:center; color:var(--muted)"></div>
-    <div class="waiting-card">
-        <div class="pulse"></div>
-        <h2>Tu es dans la salle !</h2>
-        <p>En attente du début de la partie...</p>
-        <p style="margin-top:.5rem;font-size:.85rem;" id="player-count"></p>
+    <div id="round-transition">
+        <div id="round-anim-name" class="round-title-anim"></div>
     </div>
-</div>
 
-<div class="screen" id="screen-intro">
-    <div class="logo">⚔️ Question pour un Impérien</div>
-    <div style="width:100%; aspect-ratio:16/9; border-radius:16px; overflow:hidden;">
-        <iframe id="intro-iframe" style="width:100%; height:100%; border:none;" allowfullscreen allow="autoplay"></iframe>
+    <div id="setup-screen">
+        <h1 style="font-family:'Syne'; margin-bottom: 2rem;">REJOINDRE LE JEU</h1>
+        <input type="text" id="player-name" placeholder="Ton pseudo...">
+        <button class="btn-join" onclick="joinGame()">ENTRER DANS L'ARÈNE</button>
     </div>
-</div>
 
-<div class="screen" id="screen-round_intro">
-    <div class="logo">⚔️ Question pour un Impérien</div>
-    <div class="round-card">
-        <div class="round-number" id="round-number">Manche 1</div>
-        <div class="round-name" id="round-name">Chargement...</div>
-        <div class="round-progress" id="round-progress"></div>
+    <div id="wait-screen" style="display:none;">
+        <h2 style="color:var(--gold)">PRÉPARE TON COSMOS</h2>
+        <p style="margin-top:1rem; color:var(--muted)">Le Maître va bientôt lancer la partie...</p>
     </div>
-</div>
 
-<div class="screen" id="screen-question">
-    <div id="round-label" style="font-size:.8rem; color:var(--gold); text-transform:uppercase; text-align:center;"></div>
-    <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:.5rem;">
-        <div class="timer-text" id="timer-text">45</div>
-        <div class="timer-bar-bg"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
-    </div>
-    <div class="question-card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
-            <span id="q-type-badge" style="background:var(--accent); padding:.3rem .8rem; border-radius:100px; font-size:.8rem;">QCM</span>
-            <span id="q-index" style="color:var(--muted); font-size:.9rem;">Q1</span>
+    <div id="game-screen">
+        <div class="question-box">
+            <div id="question-text" class="q-text">Chargement de la question...</div>
         </div>
-        <div id="q-text" style="font-size:1.25rem; font-weight:700; margin-bottom:1.5rem; font-family:'Syne';"></div>
-        <div id="q-answer-zone"></div>
+        <div id="options-container" class="options-grid"></div>
     </div>
-    <div id="answer-status-zone"></div>
-</div>
 
-<div class="screen" id="screen-leaderboard">
-    <h2 style="font-size:1.6rem; margin-bottom:1rem;">🏆 Classement</h2>
-    <div class="leaderboard" id="leaderboard-list"></div>
-</div>
+    <script>
+        let ws;
+        let myName = "";
 
-<div class="screen" id="screen-end">
-    <div class="logo">🎉 Terminé !</div>
-    <h2 style="text-align:center; margin:1rem 0;">Classement final</h2>
-    <div class="leaderboard" id="final-leaderboard-list"></div>
-</div>
+        function joinGame() {
+            myName = document.getElementById('player-name').value;
+            if(!myName) return alert("Choisis un pseudo !");
+            
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}`);
 
-<script>
-let ws, playerId, playerName, myAnswer = null;
-let timerInterval = null, timerSeconds = 45, timerDuration = 45;
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'join', name: myName }));
+                document.getElementById('setup-screen').style.display = 'none';
+                document.getElementById('wait-screen').style.display = 'flex';
+            };
 
-function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById('screen-' + id);
-    if (el) el.classList.add('active');
-}
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
 
-function connect(name) {
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${location.host}`);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'player_join', name }));
-    ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
-    ws.onclose = () => setTimeout(() => { if (playerName) connect(playerName); }, 2000);
-}
+                // Gestion de l'animation de manche
+                if (data.type === 'phase_change' && data.phase === 'round_intro') {
+                    showRoundAnim(data.roundName);
+                }
 
-function handleMessage(data) {
-    switch (data.type) {
-        case 'joined':
-            playerId = data.id;
-            showScreen('waiting');
-            document.getElementById('player-name-display').textContent = '👤 ' + playerName;
-            break;
-        case 'player_joined':
-        case 'player_left':
-            document.getElementById('player-count').textContent = data.count + ' joueur(s) connecté(s)';
-            break;
-        case 'phase_change':
-            handlePhase(data);
-            break;
-        case 'show_answer':
-            stopTimer();
-            showAnswer(data);
-            break;
-    }
-}
+                // Affichage d'une question
+                if (data.type === 'question') {
+                    showQuestion(data);
+                }
+                
+                // Fin de question ou reset
+                if (data.type === 'phase_change' && data.phase === 'wait') {
+                    document.getElementById('game-screen').style.display = 'none';
+                    document.getElementById('wait-screen').style.display = 'flex';
+                }
+            };
+        }
 
-function handlePhase(data) {
-    myAnswer = null;
-    stopTimer();
-    switch (data.phase) {
-        case 'round_intro':
-            renderRoundIntro(data.round);
-            showScreen('round_intro');
-            break;
-        case 'question':
-            renderQuestion(data.question, data.index, data.total, data.round);
-            showScreen('question');
-            startTimer(data.timer || 45);
-            break;
-        case 'leaderboard':
-            renderLeaderboard(data.leaderboard, 'leaderboard-list');
-            showScreen('leaderboard');
-            break;
-        case 'end':
-            renderLeaderboard(data.leaderboard, 'final-leaderboard-list');
-            showScreen('end');
-            break;
-    }
-}
+        function showRoundAnim(name) {
+            const trans = document.getElementById('round-transition');
+            const nameText = document.getElementById('round-anim-name');
+            nameText.textContent = name;
+            trans.style.display = 'flex';
+            setTimeout(() => { trans.style.display = 'none'; }, 3000);
+        }
 
-function startTimer(duration) {
-    timerDuration = duration;
-    timerSeconds = duration;
-    updateTimerUI();
-    timerInterval = setInterval(() => {
-        timerSeconds--;
-        updateTimerUI();
-        if (timerSeconds <= 0) stopTimer();
-    }, 1000);
-}
-
-function stopTimer() { clearInterval(timerInterval); }
-
-function updateTimerUI() {
-    const text = document.getElementById('timer-text');
-    const bar = document.getElementById('timer-bar');
-    text.textContent = Math.max(0, timerSeconds);
-    bar.style.width = (Math.max(0, timerSeconds) / timerDuration * 100) + '%';
-    if (timerSeconds <= 10) text.classList.add('danger');
-    else text.classList.remove('danger');
-}
-
-function renderQuestion(q, index, total, round) {
-    document.getElementById('q-index').textContent = `Q${index+1}/${total}`;
-    document.getElementById('q-text').textContent = q.question;
-    const zone = document.getElementById('q-answer-zone');
-    zone.innerHTML = '';
-    
-    if (q.type === 'qcm') {
-        zone.innerHTML = `<div class="choices">${q.choices.map((c, i) => 
-            `<button class="choice-btn" onclick="sendAnswer('${c.replace(/'/g, "\\'")}', this)">${c}</button>`
-        ).join('')}</div>`;
-    } else if (q.type === 'vrai_faux') {
-        zone.innerHTML = `<div style="display:flex; gap:1rem;">
-            <button class="choice-btn" style="flex:1" onclick="sendAnswer('Vrai', this)">✅ Vrai</button>
-            <button class="choice-btn" style="flex:1" onclick="sendAnswer('Faux', this)">❌ Faux</button>
-        </div>`;
-    }
-}
-
-function sendAnswer(answer, btn) {
-    if (myAnswer) return;
-    myAnswer = answer;
-    if(btn) btn.classList.add('selected');
-    ws.send(JSON.stringify({ type: 'player_answer', answer }));
-}
-
-function renderLeaderboard(lb, containerId) {
-    document.getElementById(containerId).innerHTML = lb.map((p, i) => `
-        <div class="lb-item">
-            <span class="lb-rank ${i === 0 ? 'gold' : ''}">${i + 1}</span>
-            <span style="flex:1">${p.name}</span>
-            <span class="lb-score">${p.score} pts</span>
-        </div>`).join('');
-}
-
-function joinGame() {
-    const val = document.getElementById('pseudo-input').value.trim();
-    if (val) { playerName = val; connect(val); }
-}
-</script>
+        function showQuestion(data) {
+            document.getElementById('wait-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            document.getElementById('question-text').textContent = data.text;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+            
+            data.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.textContent = opt;
+                btn.onclick = () => {
+                    // Désactiver les autres boutons après le clic
+                    Array.from(container.children).forEach(b => b.style.opacity = "0.5");
+                    btn.style.opacity = "1";
+                    btn.classList.add('selected');
+                    ws.send(JSON.stringify({ type: 'answer', answer: opt }));
+                };
+                container.appendChild(btn);
+            });
+        }
+    </script>
 </body>
 </html>
