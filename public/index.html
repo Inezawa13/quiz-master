@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joueur — Arena</title>
+    <title>Arena — Saint Seiya</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #080810; --gold: #f59e0b; --accent: #7c3aed; --text: #f8fafc; }
-        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; text-align: center; margin: 0; }
-        #setup-screen, #wait-screen, #game-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .btn-join { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: 800; cursor: pointer; }
-        input { background: #1a1a2e; border: 1px solid var(--accent); color: white; padding: 15px; border-radius: 10px; width: 100%; max-width: 300px; margin-bottom: 10px; }
-        .opt-btn { background: #161625; border: 1px solid #333; color: white; padding: 15px; border-radius: 10px; margin: 5px; width: 100%; max-width: 400px; font-weight: bold; }
+        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; text-align: center; margin: 0; overflow: hidden; }
+        .screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        input { background: #1a1a2e; border: 1px solid var(--accent); color: white; padding: 15px; border-radius: 10px; width: 100%; max-width: 300px; margin-bottom: 10px; text-align: center; font-size: 1rem; }
+        .btn-gold { background: var(--gold); color: black; border: none; padding: 15px 30px; border-radius: 10px; font-weight: 800; cursor: pointer; font-family: 'Syne'; }
+        .waiting-msg { font-family: 'Syne'; font-size: 1.5rem; color: var(--gold); text-transform: uppercase; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .opt-btn { background: #161625; border: 1px solid #333; color: white; padding: 15px; border-radius: 10px; margin: 5px; width: 100%; max-width: 400px; font-weight: bold; cursor: pointer; }
         .opt-btn:active { background: var(--accent); }
     </style>
 </head>
 <body>
-    <div id="setup-screen">
-        <h1 style="font-family:'Syne'; color:var(--gold)">REJOINDRE</h1>
-        <input type="text" id="player-name" placeholder="Pseudo...">
-        <button class="btn-join" onclick="joinGame()">ENTRER</button>
+    <div id="setup-screen" class="screen">
+        <h1 style="font-family:'Syne'; color:var(--gold)">ÉVEILLE TON COSMOS</h1>
+        <input type="text" id="player-name" placeholder="Nom du Chevalier...">
+        <button class="btn-gold" onclick="joinGame()">REJOINDRE L'ARÈNE</button>
     </div>
 
-    <div id="wait-screen" style="display:none;">
-        <h2 style="font-family:'Syne'; color:var(--gold)">BIENVENUE</h2>
-        <p>Attente du lancement par le Maître...</p>
+    <div id="wait-screen" class="screen" style="display:none;">
+        <div class="waiting-msg">Attente du Grand Pope...</div>
+        <p style="margin-top:20px; color:#64748b;">Prépare-toi, le tournoi va commencer.</p>
     </div>
 
-    <div id="game-screen" style="display:none;">
-        <h3 id="question-text" style="font-family:'Syne'; margin-bottom:20px;"></h3>
+    <div id="game-screen" class="screen" style="display:none;">
+        <h3 id="question-text" style="font-family:'Syne'; color:var(--gold); margin-bottom:20px;"></h3>
         <div id="options-container" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
     </div>
 
@@ -39,13 +41,11 @@
             if(!name) return;
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}`);
-            
             ws.onopen = () => {
                 ws.send(JSON.stringify({ type: 'join', name: name }));
                 document.getElementById('setup-screen').style.display = 'none';
                 document.getElementById('wait-screen').style.display = 'flex';
             };
-
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
                 if (data.type === 'question') {
@@ -56,11 +56,10 @@
                     container.innerHTML = "";
                     data.options.forEach(opt => {
                         const btn = document.createElement('button');
-                        btn.className = 'opt-btn';
-                        btn.textContent = opt;
+                        btn.className = 'opt-btn'; btn.textContent = opt;
                         btn.onclick = () => {
                             ws.send(JSON.stringify({ type: 'answer', answer: opt }));
-                            container.innerHTML = "<p>Réponse envoyée !</p>";
+                            container.innerHTML = "<p style='color:var(--gold)'>Cosmos envoyé !</p>";
                         };
                         container.appendChild(btn);
                     });
