@@ -190,7 +190,13 @@ input[type=“text”] { width:100%; padding:12px; margin-bottom:10px; backgroun
         break;
 
       case 'state_update':
+        // Charge les joueurs déjà connectés
+        if (data.state && data.state.players) {
+          const players = Object.values(data.state.players);
+          updatePlayers(players);
+        }
         if (data.leaderboard) updateLeaderboard(data.leaderboard);
+        if (data.state && data.state.phase) updateStatusBar(data.state.phase);
         break;
 
       case 'players_update':
