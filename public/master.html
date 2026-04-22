@@ -2,81 +2,109 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Panel Maître — Accès Sécurisé</title>
+<title>Master Panel — Gestion Totale</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #080810; --surface: #10101a; --surface2: #18182a; --accent: #7c3aed; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; --border: rgba(255,255,255,.06); }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100vh; overflow: hidden; display: grid; grid-template-columns: 320px 1fr; }
   
-  /* Écran de verrouillage */
+  /* Auth */
   #auth-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:10000; display:flex; align-items:center; justify-content:center; }
   .auth-box { background:var(--surface); padding:2rem; border-radius:20px; border:1px solid var(--accent); text-align:center; width:320px; }
 
+  /* Layout */
   .sidebar { background:var(--surface); border-right:1px solid var(--border); padding:1rem; display:flex; flex-direction:column; gap:1rem; overflow-y: auto; }
-  .panel { background:var(--surface2); border-radius:12px; padding:1rem; border:1px solid var(--border); }
+  .panel { background:var(--surface2); border-radius:12px; padding:1rem; border:1px solid var(--border); margin-bottom: 1rem; }
   
-  .btn { padding:.7rem 1rem; border-radius:10px; border:none; font-weight:700; font-family:'Syne'; cursor:pointer; color: white; }
-  .btn-primary { background:var(--accent); }
+  .btn { padding:.7rem 1rem; border-radius:10px; border:none; font-weight:700; font-family:'Syne'; cursor:pointer; color: white; transition: 0.2s; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background:var(--accent); width: 100%; }
   .btn-gold { background:var(--gold); color:#000; }
   .btn-pause { background: #3b82f6; }
 
-  .round-tab { padding:.5rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-size:.8rem; margin-bottom: 5px; }
-  .round-tab.active { border-color:var(--gold); color:var(--gold); }
+  /* Tabs & Lists */
+  .round-tab { padding:.5rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-size:.8rem; margin-bottom: 5px; text-align: center; }
+  .round-tab.active { border-color:var(--gold); color:var(--gold); background: rgba(245, 158, 11, 0.1); }
+  
+  .player-tag { display: inline-block; padding: 4px 10px; background: #222; border-radius: 6px; margin: 3px; font-size: 0.8rem; color: var(--gold); border: 1px solid rgba(245,158,11,0.2); }
+  .answer-item { padding: 0.6rem; background: var(--bg); border-radius: 8px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; }
 
-  .answer-item { padding: 0.5rem; background: var(--bg); border-radius: 8px; margin-bottom: 0.4rem; font-size: 0.8rem; border-left: 3px solid var(--accent); display: flex; justify-content: space-between; }
-  .player-tag { display: inline-block; padding: 2px 8px; background: #222; border-radius: 4px; margin: 2px; font-size: 0.75rem; color: var(--gold); }
-  input { background:var(--bg); border:1px solid var(--border); color:white; padding:0.8rem; border-radius:8px; width:100%; margin-bottom:1rem; outline:none; }
+  /* Editeur de questions */
+  input, textarea { background:var(--bg); border:1px solid var(--border); color:white; padding:0.8rem; border-radius:8px; width:100%; margin-bottom:0.8rem; outline:none; font-family: inherit; }
+  .q-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; position: relative; }
+  .q-number { position: absolute; top: -10px; left: -10px; background: var(--accent); width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
 </style>
 </head>
 <body>
 
   <div id="auth-screen">
       <div class="auth-box">
-          <h2 style="font-family:'Syne'; margin-bottom:1rem; color:var(--gold);">ADMINISTRATION</h2>
-          <input type="password" id="admin-password" placeholder="Mot de passe...">
-          <button class="btn btn-primary" onclick="checkAuth()" style="width:100%;">ENTRER</button>
+          <h2 style="font-family:'Syne'; margin-bottom:1.5rem; color:var(--gold);">MAÎTRE DU JEU</h2>
+          <input type="password" id="admin-password" placeholder="Mot de passe secret...">
+          <button class="btn btn-primary" onclick="checkAuth()">S'ÉVEILLER</button>
       </div>
   </div>
 
   <div class="sidebar">
     <div class="panel">
-      <h3 style="font-size:0.7rem; color:var(--gold); text-transform:uppercase;">👥 CHEVALIERS (<span id="p-count">0</span>)</h3>
-      <div id="player-list" style="margin-top:0.5rem;"></div>
+      <h3 style="font-size:0.7rem; color:var(--gold); text-transform:uppercase; margin-bottom: 0.5rem;">👥 CHEVALIERS (<span id="p-count">0</span>)</h3>
+      <div id="player-list"></div>
     </div>
+
     <div class="panel" style="flex:1;">
-      <h3 style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">💬 RÉPONSES</h3>
+      <h3 style="font-size:0.7rem; color:var(--muted); text-transform:uppercase; margin-bottom: 0.5rem;">💬 FLUX RÉPONSES</h3>
       <div id="answer-feed"></div>
     </div>
-    <div class="panel" style="background: #1a0a2e;">
-      <h3 style="font-size:0.7rem; color:var(--gold);">🏆 TOP 5 SECRET</h3>
-      <div id="top-5-list" style="font-size:0.8rem; margin: 0.5rem 0;"></div>
-      <button onclick="updateLeaderboard()" class="btn" style="width:100%; font-size:0.7rem; background:rgba(255,255,255,0.1)">Calculer Finalistes</button>
+
+    <div class="panel" style="background: #1a0a2e; border-color: var(--gold);">
+      <h3 style="font-size:0.7rem; color:var(--gold);">🏆 CLASSEMENT FINAL</h3>
+      <div id="top-5-list" style="font-size:0.85rem; margin: 0.8rem 0; color: white;"></div>
+      <button onclick="updateLeaderboard()" class="btn" style="width:100%; font-size:0.7rem; background:rgba(255,255,255,0.1)">CALCULER LE TOP 5</button>
     </div>
   </div>
 
   <div style="padding:1.5rem; overflow-y: auto;">
-    <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
-      <button class="btn btn-primary" onclick="startGame()">🚀 START</button>
+    <div style="display:flex; gap:1rem; margin-bottom:2rem; align-items: center;">
+      <button class="btn btn-primary" style="width:auto" onclick="startGame()">🚀 START GAME</button>
       <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
-      <button class="btn btn-gold" id="btn-start-round" onclick="startRound()" style="display:none;">⚔️ MANCHE SUIVANTE</button>
+      <button class="btn btn-gold" id="btn-start-round" onclick="startRound()" style="display:none;">⚔️ LANCER MANCHE</button>
       <button class="btn btn-gold" id="btn-next" onclick="nextQuestion()" style="display:none;">⏭ QUESTION SUIVANTE</button>
+      <div id="timer-ui" style="display:none; font-size:2.5rem; font-family:'Syne'; font-weight:800; margin-left: auto; color: var(--gold);">30</div>
     </div>
 
-    <div id="timer-ui" style="display:none; font-size:4rem; font-family:'Syne'; font-weight:800; margin-bottom:1rem;">30</div>
+    <div id="rounds-tabs" style="display:flex; gap:10px; margin-bottom:2rem;"></div>
 
-    <div id="rounds-tabs" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:1rem;"></div>
-    
-    <div class="panel">
-      <h2 id="round-title" style="color:var(--gold); margin-bottom:1rem;">Manche 1</h2>
-      <p style="color:var(--muted)">Préparez vos questions pour cette manche.</p>
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 1.5rem;">
+      <div>
+        <h2 id="round-title" style="font-family:'Syne'; color:var(--gold); margin-bottom:1.5rem;">Manche 1</h2>
+        <div id="questions-display"></div>
+      </div>
+
+      <div class="panel" style="position: sticky; top: 0; height: fit-content;">
+        <h3 style="font-family:'Syne'; font-size:0.9rem; margin-bottom:1rem; color: var(--accent);">➕ AJOUTER UNE QUESTION</h3>
+        <input type="text" id="q-input" placeholder="Ta question...">
+        <input type="text" id="r1" placeholder="Réponse 1 (La bonne)">
+        <input type="text" id="r2" placeholder="Réponse 2">
+        <input type="text" id="r3" placeholder="Réponse 3">
+        <input type="text" id="r4" placeholder="Réponse 4">
+        <button class="btn btn-primary" onclick="addQuestion()">ENREGISTRER</button>
+      </div>
     </div>
   </div>
 
 <audio id="buzzer-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3"></audio>
 
 <script>
-let ws; let activeRound = 0; let answersReceived = 0; let scores = {}; let isPaused = false;
+let ws;
+let activeRound = 0;
+let answersReceived = 0;
+let scores = {};
+let isPaused = false;
+
+// On initialise les questions par manche
+let allQuestions = [[], [], [], [], []];
+
 const rounds = [
   { name: "L'Éveil de Seiya", timer: 30 },
   { name: "La Fureur d'Ikki", timer: 30 },
@@ -87,37 +115,28 @@ const rounds = [
 
 function checkAuth() {
     const pwd = document.getElementById('admin-password').value;
-    if(pwd) {
-        connect(pwd);
-    }
+    if(pwd) connect(pwd);
 }
 
 function connect(password) {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${protocol}//${location.host}`);
+    ws.onopen = () => ws.send(JSON.stringify({ type: 'master_auth', password: password }));
     
-    ws.onopen = () => {
-        // Envoi du mot de passe au serveur dès la connexion
-        ws.send(JSON.stringify({ type: 'master_auth', password: password }));
-    };
-
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
         
-        // Si le serveur valide le mot de passe
         if(data.type === 'master_auth_ok') {
             document.getElementById('auth-screen').style.display = 'none';
             renderTabs();
-        }
-        
-        // Si le serveur refuse le mot de passe
-        if(data.type === 'master_auth_fail') {
-            alert("Mot de passe incorrect !");
+            renderQuestions();
         }
 
-        if(data.type === 'player_list') {
-            document.getElementById('p-count').textContent = data.players.length;
-            document.getElementById('player-list').innerHTML = data.players.map(p => `<span class="player-tag">${p.name}</span>`).join('');
+        if(data.type === 'player_list' || data.type === 'new_player') {
+            // Note : Certains serveurs envoient data.players, d'autres data.name
+            const list = data.players || [];
+            document.getElementById('p-count').textContent = list.length;
+            document.getElementById('player-list').innerHTML = list.map(p => `<span class="player-tag">${p.name}</span>`).join('');
         }
 
         if(data.type === 'answer_update') {
@@ -131,7 +150,7 @@ function connect(password) {
             scores[data.playerName] += pts;
             const div = document.createElement('div');
             div.className = 'answer-item';
-            div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts}</span>`;
+            div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts} pts</span>`;
             document.getElementById('answer-feed').prepend(div);
         }
         
@@ -143,30 +162,93 @@ function connect(password) {
             document.getElementById('btn-next').style.display = (data.phase === 'question') ? 'block' : 'none';
             document.getElementById('btn-start-round').style.display = (data.phase === 'round_intro') ? 'block' : 'none';
             document.getElementById('timer-ui').style.display = (data.phase === 'question') ? 'block' : 'none';
-            if(data.phase === 'round_intro') document.getElementById('round-title').textContent = data.roundName;
+            if(data.phase === 'round_intro') {
+              document.getElementById('round-title').textContent = data.roundName;
+            }
         }
     };
+}
+
+// GESTION DES QUESTIONS
+function addQuestion() {
+  const text = document.getElementById('q-input').value;
+  const options = [
+    document.getElementById('r1').value,
+    document.getElementById('r2').value,
+    document.getElementById('r3').value,
+    document.getElementById('r4').value
+  ];
+
+  if(!text || !options[0]) return alert("Remplis au moins la question et la bonne réponse !");
+
+  allQuestions[activeRound].push({ text, options });
+  
+  // On vide le formulaire
+  document.getElementById('q-input').value = "";
+  document.getElementById('r1').value = "";
+  document.getElementById('r2').value = "";
+  document.getElementById('r3').value = "";
+  document.getElementById('r4').value = "";
+
+  renderQuestions();
+  
+  // ENVOI AU SERVEUR (Pour que le serveur connaisse la question)
+  ws.send(JSON.stringify({ 
+    type: 'admin_add_question', 
+    roundIndex: activeRound, 
+    question: { text, options } 
+  }));
+}
+
+function renderQuestions() {
+  const container = document.getElementById('questions-display');
+  const qs = allQuestions[activeRound];
+  if(qs.length === 0) {
+    container.innerHTML = "<p style='color:var(--muted)'>Aucune question dans cette manche.</p>";
+    return;
+  }
+  container.innerHTML = qs.map((q, i) => `
+    <div class="q-card">
+      <div class="q-number">${i+1}</div>
+      <div style="font-weight:bold; margin-bottom:0.5rem;">${q.text}</div>
+      <div style="font-size:0.8rem; color:var(--gold)">✅ ${q.options[0]}</div>
+      <div style="font-size:0.8rem; opacity:0.6;">❌ ${q.options.slice(1).join(' | ')}</div>
+    </div>
+  `).join('');
+}
+
+function renderTabs() {
+  document.getElementById('rounds-tabs').innerHTML = rounds.map((r, i) => `
+    <div class="round-tab ${i === activeRound ? 'active' : ''}" style="flex:1" onclick="activeRound=${i}; renderTabs(); renderQuestions();">
+      ${r.name}
+    </div>
+  `).join('');
+  document.getElementById('round-title').textContent = rounds[activeRound].name;
+}
+
+// AUTRES FONCTIONS
+function togglePause() {
+    isPaused = !isPaused;
+    const btn = document.getElementById('btn-pause');
+    if(isPaused) {
+      btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE";
+      ws.send(JSON.stringify({ type: 'master_pause_on' }));
+    } else {
+      btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI";
+      ws.send(JSON.stringify({ type: 'master_pause_off' }));
+    }
+}
+
+function updateLeaderboard() {
+    const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
+    document.getElementById('top-5-list').innerHTML = sorted.map(([n, s], i) => `
+      <div style="margin-bottom:5px;"><b>${i+1}. ${n}</b> — ${s} pts</div>
+    `).join('');
 }
 
 function startTimer(sec) {
     let t = sec; const el = document.getElementById('timer-ui');
     const int = setInterval(() => { t--; el.textContent = Math.max(0, t); if(t <= 0) clearInterval(int); }, 1000);
-}
-
-function togglePause() {
-    isPaused = !isPaused;
-    const btn = document.getElementById('btn-pause');
-    if(isPaused) { btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE"; ws.send(JSON.stringify({ type: 'master_pause_on' })); }
-    else { btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI"; ws.send(JSON.stringify({ type: 'master_pause_off' })); }
-}
-
-function updateLeaderboard() {
-    const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
-    document.getElementById('top-5-list').innerHTML = sorted.map(([n, s], i) => `<div>${i+1}. ${n} (${s} pts)</div>`).join('');
-}
-
-function renderTabs() {
-    document.getElementById('rounds-tabs').innerHTML = rounds.map((r, i) => `<div class="round-tab ${i === activeRound ? 'active' : ''}" onclick="activeRound=${i}; renderTabs();">${r.name}</div>`).join('');
 }
 
 function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
