@@ -12,38 +12,63 @@ app.use(express.json());
 
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'master123';
 
-// Game state
 let gameState = {
-  phase: 'waiting', // waiting | intro | question | results | leaderboard | end
+  phase: 'waiting',
   players: {},
-  questions: [],
+  rounds: [
+    { name: "L'Éveil de Seiya", timer: 40, questions: [] },
+    { name: "La Fureur d'Ikki", timer: 45, questions: [] },
+    { name: "Le Jugement de Saga", timer: 45, questions: [] },
+    { name: "La Malédiction d'Hadès", timer: 50, questions: [] },
+    { name: "Le Cosmos d'Athéna", timer: 55, questions: [] },
+  ],
+  currentRoundIndex: -1,
   currentQuestionIndex: -1,
   currentQuestion: null,
+  currentRound: null,
   answers: {},
+  answerTimes: {},
   scores: {},
   introVideo: null,
+  paused: false,
 };
 
-function broadcast(data, excludeWs = null) {
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN && client !== excludeWs) {
-      client.send(JSON.stringify(data));
-    }
-  });
-}
-
 function broadcastAll(data) {
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(data));
-    }
-  });
+  wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(JSON.stringify(data)); });
+}
+function broadcastMaster(data) {
+  wss.clients.forEach(c => { if (c.isMaster && c.readyState === WebSocket.OPEN) c.send(JSON.stringify(data)); });
+}
+function broadcastPlayers(data) {
+  wss.clients.forEach(c => { if (!c.isMaster && c.readyState === WebSocket.OPEN) c.send(JSON.stringify(data)); });
 }
 
 function getLeaderboard() {
   return Object.entries(gameState.scores)
     .map(([id, score]) => ({ id, name: gameState.players[id]?.name || id, score }))
     .sort((a, b) => b.score - a.score);
+}
+
+function getCurrentQuestions() {
+  if (gameState.currentRoundIndex < 0) return [];
+  return gameState.rounds[gameState.currentRoundIndex]?.questions || [];
+}
+
+function calcPoints(playerId) {
+  const q = gameState.currentQuestion;
+  const basePoints = q.points || 100;
+  // Speed bonus: rank among correct answers
+  const correctAnswers = Object.entries(gameState.answers)
+    .filter(([pid, ans]) => {
+      if (q.type === 'qcm' || q.type === 'vrai_faux') return ans === q.correctAnswer;
+      return ans?.toLowerCase().trim() === q.correctAnswer?.toLowerCase().trim();
+    })
+    .sort((a, b) => (gameState.answerTimes[a[0]] || 0) - (gameState.answerTimes[b[0]] || 0));
+  const rank = correctAnswers.findIndex(([pid]) => pid === playerId);
+  if (rank === -1) return 0;
+  // Bonus: 1st = +50, 2nd = +30, 3rd = +20, rest = +0
+  const bonuses = [50, 30, 20];
+  return basePoints + (bonuses[rank] || 0);
 }
 
 wss.on('connection', (ws) => {
@@ -55,7 +80,6 @@ wss.on('connection', (ws) => {
 
     switch (data.type) {
 
-      // --- MASTER ---
       case 'master_auth':
         if (data.password === MASTER_PASSWORD) {
           ws.isMaster = true;
@@ -66,10 +90,20 @@ wss.on('connection', (ws) => {
         }
         break;
 
-      case 'master_set_questions':
+      case 'master_set_rounds':
         if (!ws.isMaster) return;
-        gameState.questions = data.questions;
-        ws.send(JSON.stringify({ type: 'questions_saved', count: data.questions.length }));
+        data.rounds.forEach((r, i) => {
+          if (gameState.rounds[i]) gameState.rounds[i].questions = r.questions;
+        });
+        ws.send(JSON.stringify({ type: 'rounds_saved' }));
+        break;
+
+      case 'master_set_round_questions':
+        if (!ws.isMaster) return;
+        if (gameState.rounds[data.roundIndex]) {
+          gameState.rounds[data.roundIndex].questions = data.questions;
+        }
+        ws.send(JSON.stringify({ type: 'round_questions_saved', roundIndex: data.roundIndex }));
         break;
 
       case 'master_set_intro':
@@ -86,51 +120,96 @@ wss.on('connection', (ws) => {
 
       case 'master_start_game':
         if (!ws.isMaster) return;
-        gameState.phase = 'question';
+        gameState.phase = 'round_intro';
+        gameState.currentRoundIndex = 0;
         gameState.currentQuestionIndex = 0;
-        gameState.currentQuestion = gameState.questions[0];
+        gameState.currentRound = gameState.rounds[0];
         gameState.answers = {};
+        gameState.answerTimes = {};
+        gameState.paused = false;
+        broadcastAll({
+          type: 'phase_change',
+          phase: 'round_intro',
+          round: { name: gameState.currentRound.name, index: 0, total: gameState.rounds.length, timer: gameState.currentRound.timer },
+        });
+        break;
+
+      case 'master_start_round':
+        if (!ws.isMaster) return;
+        gameState.phase = 'question';
+        gameState.currentQuestion = getCurrentQuestions()[gameState.currentQuestionIndex];
+        gameState.answers = {};
+        gameState.answerTimes = {};
         broadcastAll({
           type: 'phase_change',
           phase: 'question',
           question: gameState.currentQuestion,
-          index: 0,
-          total: gameState.questions.length
+          index: gameState.currentQuestionIndex,
+          total: getCurrentQuestions().length,
+          round: { name: gameState.currentRound.name, index: gameState.currentRoundIndex, total: gameState.rounds.length, timer: gameState.currentRound.timer },
         });
+        break;
+
+      case 'master_pause':
+        if (!ws.isMaster) return;
+        gameState.paused = true;
+        broadcastAll({ type: 'paused' });
+        break;
+
+      case 'master_resume':
+        if (!ws.isMaster) return;
+        gameState.paused = false;
+        broadcastAll({ type: 'resumed' });
         break;
 
       case 'master_next_question':
         if (!ws.isMaster) return;
-        // Show correct answer first
+        // Calc scores
+        Object.keys(gameState.answers).forEach(playerId => {
+          const pts = calcPoints(playerId);
+          if (pts > 0) gameState.scores[playerId] = (gameState.scores[playerId] || 0) + pts;
+        });
         broadcastAll({
           type: 'show_answer',
           correctAnswer: gameState.currentQuestion.correctAnswer,
-          answers: gameState.answers
+          answers: gameState.answers,
+          leaderboard: getLeaderboard(),
         });
-        // Update scores
-        Object.entries(gameState.answers).forEach(([playerId, answer]) => {
-          const q = gameState.currentQuestion;
-          let correct = false;
-          if (q.type === 'qcm') correct = answer === q.correctAnswer;
-          if (q.type === 'vrai_faux') correct = answer === q.correctAnswer;
-          if (q.type === 'texte') correct = answer?.toLowerCase().trim() === q.correctAnswer?.toLowerCase().trim();
-          if (q.type === 'trou') correct = answer?.toLowerCase().trim() === q.correctAnswer?.toLowerCase().trim();
-          if (correct) gameState.scores[playerId] = (gameState.scores[playerId] || 0) + (q.points || 100);
-        });
+        broadcastMaster({ type: 'players_update', players: Object.values(gameState.players), leaderboard: getLeaderboard() });
+
         setTimeout(() => {
+          const questions = getCurrentQuestions();
           gameState.currentQuestionIndex++;
-          if (gameState.currentQuestionIndex >= gameState.questions.length) {
-            gameState.phase = 'end';
-            broadcastAll({ type: 'phase_change', phase: 'end', leaderboard: getLeaderboard() });
+
+          if (gameState.currentQuestionIndex >= questions.length) {
+            gameState.currentRoundIndex++;
+            if (gameState.currentRoundIndex >= gameState.rounds.length) {
+              gameState.phase = 'end';
+              broadcastAll({ type: 'phase_change', phase: 'end', leaderboard: getLeaderboard() });
+            } else {
+              gameState.currentRound = gameState.rounds[gameState.currentRoundIndex];
+              gameState.currentQuestionIndex = 0;
+              gameState.answers = {};
+              gameState.answerTimes = {};
+              gameState.phase = 'round_intro';
+              broadcastAll({
+                type: 'phase_change',
+                phase: 'round_intro',
+                round: { name: gameState.currentRound.name, index: gameState.currentRoundIndex, total: gameState.rounds.length, timer: gameState.currentRound.timer },
+              });
+            }
           } else {
-            gameState.currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+            gameState.currentQuestion = questions[gameState.currentQuestionIndex];
             gameState.answers = {};
+            gameState.answerTimes = {};
+            gameState.phase = 'question';
             broadcastAll({
               type: 'phase_change',
               phase: 'question',
               question: gameState.currentQuestion,
               index: gameState.currentQuestionIndex,
-              total: gameState.questions.length
+              total: questions.length,
+              round: { name: gameState.currentRound.name, index: gameState.currentRoundIndex, total: gameState.rounds.length, timer: gameState.currentRound.timer },
             });
           }
         }, 4000);
@@ -144,45 +223,41 @@ wss.on('connection', (ws) => {
       case 'master_reset':
         if (!ws.isMaster) return;
         gameState.phase = 'waiting';
+        gameState.currentRoundIndex = -1;
         gameState.currentQuestionIndex = -1;
         gameState.currentQuestion = null;
+        gameState.currentRound = null;
         gameState.answers = {};
+        gameState.answerTimes = {};
         gameState.scores = {};
+        gameState.paused = false;
+        gameState.rounds.forEach(r => r.questions = []);
         broadcastAll({ type: 'phase_change', phase: 'waiting' });
         break;
 
-      // --- PLAYER ---
       case 'player_join':
         gameState.players[ws.id] = { name: data.name, id: ws.id };
         gameState.scores[ws.id] = 0;
         ws.playerName = data.name;
         ws.send(JSON.stringify({ type: 'joined', id: ws.id, phase: gameState.phase }));
-        broadcast({ type: 'player_joined', name: data.name, id: ws.id, count: Object.keys(gameState.players).length });
-        // Notify master
-        wss.clients.forEach(c => {
-          if (c.isMaster && c.readyState === WebSocket.OPEN) {
-            c.send(JSON.stringify({ type: 'players_update', players: Object.values(gameState.players), leaderboard: getLeaderboard() }));
-          }
-        });
+        broadcastMaster({ type: 'players_update', players: Object.values(gameState.players), leaderboard: getLeaderboard() });
+        broadcastAll({ type: 'player_joined', name: data.name, id: ws.id, count: Object.keys(gameState.players).length });
         break;
 
       case 'player_answer':
         if (!gameState.players[ws.id]) return;
-        if (gameState.answers[ws.id]) return; // already answered
+        if (gameState.answers[ws.id]) return;
+        if (gameState.paused) return;
         gameState.answers[ws.id] = data.answer;
+        gameState.answerTimes[ws.id] = Date.now();
         ws.send(JSON.stringify({ type: 'answer_received' }));
-        // Notify master
-        wss.clients.forEach(c => {
-          if (c.isMaster && c.readyState === WebSocket.OPEN) {
-            c.send(JSON.stringify({
-              type: 'answer_update',
-              playerId: ws.id,
-              playerName: gameState.players[ws.id]?.name,
-              answer: data.answer,
-              count: Object.keys(gameState.answers).length,
-              total: Object.keys(gameState.players).length
-            }));
-          }
+        broadcastMaster({
+          type: 'answer_update',
+          playerId: ws.id,
+          playerName: gameState.players[ws.id]?.name,
+          answer: data.answer,
+          count: Object.keys(gameState.answers).length,
+          total: Object.keys(gameState.players).length,
         });
         break;
     }
@@ -191,7 +266,8 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     if (gameState.players[ws.id]) {
       delete gameState.players[ws.id];
-      broadcast({ type: 'player_left', id: ws.id, count: Object.keys(gameState.players).length });
+      broadcastMaster({ type: 'players_update', players: Object.values(gameState.players), leaderboard: getLeaderboard() });
+      broadcastAll({ type: 'player_left', id: ws.id, count: Object.keys(gameState.players).length });
     }
   });
 });
