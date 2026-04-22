@@ -2,97 +2,81 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Panel Maître — Question pour un Impérien</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Panel Maître — Accès Sécurisé</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #080810; --surface: #10101a; --surface2: #18182a; --surface3: #22223a;
-    --accent: #7c3aed; --accent2: #a855f7; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; --border: rgba(255,255,255,.06);
-  }
+  :root { --bg: #080810; --surface: #10101a; --surface2: #18182a; --accent: #7c3aed; --gold: #f59e0b; --text: #f8fafc; --muted: #64748b; --border: rgba(255,255,255,.06); }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow: hidden; }
-  h1,h2,h3,h4 { font-family:'Syne',sans-serif; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100vh; overflow: hidden; display: grid; grid-template-columns: 320px 1fr; }
+  
+  /* Écran de verrouillage */
+  #auth-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:10000; display:flex; align-items:center; justify-content:center; }
+  .auth-box { background:var(--surface); padding:2rem; border-radius:20px; border:1px solid var(--accent); text-align:center; width:320px; }
 
-  .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
-  .layout { display:grid; grid-template-columns:300px 1fr; height:calc(100vh - 60px); }
+  .sidebar { background:var(--surface); border-right:1px solid var(--border); padding:1rem; display:flex; flex-direction:column; gap:1rem; overflow-y: auto; }
+  .panel { background:var(--surface2); border-radius:12px; padding:1rem; border:1px solid var(--border); }
   
-  .sidebar { background:var(--surface); border-right:1px solid var(--border); padding:1.2rem; display:flex; flex-direction:column; gap:1rem; }
-  .panel { background:var(--surface2); border-radius:14px; padding:1.2rem; border:1px solid var(--border); }
-  
-  .btn { padding:.8rem 1.4rem; border-radius:10px; border:none; font-size:.95rem; font-weight:600; font-family:'Syne',sans-serif; cursor:pointer; transition:all .2s; color: white; text-align:center; }
-  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); }
+  .btn { padding:.7rem 1rem; border-radius:10px; border:none; font-weight:700; font-family:'Syne'; cursor:pointer; color: white; }
+  .btn-primary { background:var(--accent); }
   .btn-gold { background:var(--gold); color:#000; }
   .btn-pause { background: #3b82f6; }
-  .btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
 
-  .rounds-tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
-  .round-tab { padding:.4rem .9rem; border-radius:8px; border:1.5px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-size:.85rem; }
-  .round-tab.active { border-color:var(--gold); color:var(--gold); background:rgba(245,158,11,.1); }
+  .round-tab { padding:.5rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-size:.8rem; margin-bottom: 5px; }
+  .round-tab.active { border-color:var(--gold); color:var(--gold); }
 
-  .master-timer { background:var(--surface2); border-radius:12px; padding:.8rem 1.2rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border); margin: 1rem 0; }
-  .master-timer-text { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; min-width:40px; }
-  .master-timer-bar-bg { flex:1; height:8px; background:var(--surface3); border-radius:100px; overflow:hidden; }
-  .master-timer-bar { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition: width 1s linear; }
-
-  .answer-item { padding: 0.5rem; background: var(--surface3); border-radius: 8px; margin-bottom: 0.4rem; font-size: 0.85rem; border-left: 3px solid var(--accent2); display: flex; justify-content: space-between; }
-  
-  .final-leaderboard { background: #1a1a2e; border-top: 2px solid var(--gold); padding: 1rem; border-radius: 10px; margin-top: auto; }
+  .answer-item { padding: 0.5rem; background: var(--bg); border-radius: 8px; margin-bottom: 0.4rem; font-size: 0.8rem; border-left: 3px solid var(--accent); display: flex; justify-content: space-between; }
+  .player-tag { display: inline-block; padding: 2px 8px; background: #222; border-radius: 4px; margin: 2px; font-size: 0.75rem; color: var(--gold); }
+  input { background:var(--bg); border:1px solid var(--border); color:white; padding:0.8rem; border-radius:8px; width:100%; margin-bottom:1rem; outline:none; }
 </style>
 </head>
 <body>
 
-  <div class="topbar">
-    <span style="font-family:'Syne'; font-weight:800; color:var(--gold);">⚔️ CONTRÔLE QCM</span>
-    <div>
-        <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
-        <button class="btn btn-ghost" onclick="resetGame()">🔄 Reset</button>
+  <div id="auth-screen">
+      <div class="auth-box">
+          <h2 style="font-family:'Syne'; margin-bottom:1rem; color:var(--gold);">ADMINISTRATION</h2>
+          <input type="password" id="admin-password" placeholder="Mot de passe...">
+          <button class="btn btn-primary" onclick="checkAuth()" style="width:100%;">ENTRER</button>
+      </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel">
+      <h3 style="font-size:0.7rem; color:var(--gold); text-transform:uppercase;">👥 CHEVALIERS (<span id="p-count">0</span>)</h3>
+      <div id="player-list" style="margin-top:0.5rem;"></div>
+    </div>
+    <div class="panel" style="flex:1;">
+      <h3 style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">💬 RÉPONSES</h3>
+      <div id="answer-feed"></div>
+    </div>
+    <div class="panel" style="background: #1a0a2e;">
+      <h3 style="font-size:0.7rem; color:var(--gold);">🏆 TOP 5 SECRET</h3>
+      <div id="top-5-list" style="font-size:0.8rem; margin: 0.5rem 0;"></div>
+      <button onclick="updateLeaderboard()" class="btn" style="width:100%; font-size:0.7rem; background:rgba(255,255,255,0.1)">Calculer Finalistes</button>
     </div>
   </div>
 
-  <div class="layout">
-    <div class="sidebar">
-      <div class="panel" style="flex:1; overflow-y:auto;">
-        <h3 style="font-size:0.7rem; color:var(--muted); text-transform:uppercase; margin-bottom:0.8rem;">💬 Réponses</h3>
-        <div id="answer-feed"></div>
-      </div>
-      
-      <div class="final-leaderboard">
-        <h3 style="font-family:'Syne'; font-size: 0.8rem; margin-bottom:0.5rem;">🏆 TOP 5 SECRET</h3>
-        <div id="top-5-list" style="font-size: 0.75rem; margin-bottom:10px;"></div>
-        <button onclick="updateLeaderboard()" class="btn btn-ghost" style="width:100%; font-size:0.7rem; padding: 5px;">Calculer Finalistes</button>
-      </div>
+  <div style="padding:1.5rem; overflow-y: auto;">
+    <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
+      <button class="btn btn-primary" onclick="startGame()">🚀 START</button>
+      <button class="btn btn-pause" id="btn-pause" onclick="togglePause()">☕ PAUSE PIPI</button>
+      <button class="btn btn-gold" id="btn-start-round" onclick="startRound()" style="display:none;">⚔️ MANCHE SUIVANTE</button>
+      <button class="btn btn-gold" id="btn-next" onclick="nextQuestion()" style="display:none;">⏭ QUESTION SUIVANTE</button>
     </div>
 
-    <div class="main-content" style="padding:1.5rem; overflow-y: auto;">
-      <div style="display:flex; gap:1rem; margin-bottom:1rem;">
-        <button class="btn btn-primary" onclick="startGame()">🚀 Lancer la Partie</button>
-        <button class="btn btn-gold" id="btn-start-round" onclick="startRound()" style="display:none;">⚔️ Manche Suivante</button>
-        <button class="btn btn-gold" id="btn-next" onclick="nextQuestion()" style="display:none;">⏭ Question Suivante</button>
-      </div>
+    <div id="timer-ui" style="display:none; font-size:4rem; font-family:'Syne'; font-weight:800; margin-bottom:1rem;">30</div>
 
-      <div class="master-timer" id="master-timer-ui" style="display:none;">
-        <span id="timer-text" class="master-timer-text">30</span>
-        <div class="master-timer-bar-bg"><div id="bar-fill" class="master-timer-bar" style="width:100%"></div></div>
-      </div>
-
-      <div class="rounds-tabs" id="rounds-tabs"></div>
-      
-      <div class="panel">
-        <h3 id="current-round-title" style="color:var(--gold); margin-bottom:1rem; font-size:1rem;">Chargement...</h3>
-        <div id="question-list"></div>
-      </div>
+    <div id="rounds-tabs" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:1rem;"></div>
+    
+    <div class="panel">
+      <h2 id="round-title" style="color:var(--gold); margin-bottom:1rem;">Manche 1</h2>
+      <p style="color:var(--muted)">Préparez vos questions pour cette manche.</p>
     </div>
   </div>
 
 <audio id="buzzer-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3"></audio>
 
 <script>
-let ws;
-let activeRoundTab = 0;
-let answersReceived = 0;
-let scores = {};
-let isPaused = false;
-
+let ws; let activeRound = 0; let answersReceived = 0; let scores = {}; let isPaused = false;
 const rounds = [
   { name: "L'Éveil de Seiya", timer: 30 },
   { name: "La Fureur d'Ikki", timer: 30 },
@@ -101,14 +85,41 @@ const rounds = [
   { name: "Le Cosmos d'Athéna", timer: 40 }
 ];
 
-function connect() {
+function checkAuth() {
+    const pwd = document.getElementById('admin-password').value;
+    if(pwd) {
+        connect(pwd);
+    }
+}
+
+function connect(password) {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${protocol}//${location.host}`);
+    
     ws.onopen = () => {
-        renderRoundTabs();
+        // Envoi du mot de passe au serveur dès la connexion
+        ws.send(JSON.stringify({ type: 'master_auth', password: password }));
     };
+
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
+        
+        // Si le serveur valide le mot de passe
+        if(data.type === 'master_auth_ok') {
+            document.getElementById('auth-screen').style.display = 'none';
+            renderTabs();
+        }
+        
+        // Si le serveur refuse le mot de passe
+        if(data.type === 'master_auth_fail') {
+            alert("Mot de passe incorrect !");
+        }
+
+        if(data.type === 'player_list') {
+            document.getElementById('p-count').textContent = data.players.length;
+            document.getElementById('player-list').innerHTML = data.players.map(p => `<span class="player-tag">${p.name}</span>`).join('');
+        }
+
         if(data.type === 'answer_update') {
             document.getElementById('buzzer-sound').play();
             answersReceived++;
@@ -123,65 +134,45 @@ function connect() {
             div.innerHTML = `<span><b>${data.playerName}</b></span> <span style="color:var(--gold)">+${pts}</span>`;
             document.getElementById('answer-feed').prepend(div);
         }
+        
         if(data.type === 'phase_change') {
             if(data.phase === 'question') {
-                answersReceived = 0;
-                document.getElementById('answer-feed').innerHTML = "";
-                startTimer(data.timer || rounds[activeRoundTab].timer);
+                answersReceived = 0; document.getElementById('answer-feed').innerHTML = "";
+                startTimer(data.timer || rounds[activeRound].timer);
             }
             document.getElementById('btn-next').style.display = (data.phase === 'question') ? 'block' : 'none';
             document.getElementById('btn-start-round').style.display = (data.phase === 'round_intro') ? 'block' : 'none';
-            document.getElementById('master-timer-ui').style.display = (data.phase === 'question') ? 'flex' : 'none';
-            if(data.phase === 'round_intro') {
-                document.getElementById('current-round-title').textContent = data.roundName;
-            }
+            document.getElementById('timer-ui').style.display = (data.phase === 'question') ? 'block' : 'none';
+            if(data.phase === 'round_intro') document.getElementById('round-title').textContent = data.roundName;
         }
     };
 }
 
 function startTimer(sec) {
-    let t = sec;
-    const text = document.getElementById('timer-text');
-    const bar = document.getElementById('bar-fill');
-    text.textContent = t;
-    bar.style.transition = 'none'; bar.style.width = '100%';
-    setTimeout(() => { bar.style.transition = `width ${sec}s linear`; bar.style.width = '0%'; }, 50);
-    const int = setInterval(() => { t--; text.textContent = Math.max(0, t); if(t <= 0) clearInterval(int); }, 1000);
+    let t = sec; const el = document.getElementById('timer-ui');
+    const int = setInterval(() => { t--; el.textContent = Math.max(0, t); if(t <= 0) clearInterval(int); }, 1000);
 }
 
 function togglePause() {
     isPaused = !isPaused;
     const btn = document.getElementById('btn-pause');
-    if(isPaused) {
-        btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE";
-        ws.send(JSON.stringify({ type: 'master_pause_on' }));
-    } else {
-        btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI";
-        ws.send(JSON.stringify({ type: 'master_pause_off' }));
-    }
+    if(isPaused) { btn.style.background = "#ef4444"; btn.textContent = "▶️ REPRENDRE"; ws.send(JSON.stringify({ type: 'master_pause_on' })); }
+    else { btn.style.background = "#3b82f6"; btn.textContent = "☕ PAUSE PIPI"; ws.send(JSON.stringify({ type: 'master_pause_off' })); }
 }
 
 function updateLeaderboard() {
     const sorted = Object.entries(scores).sort(([,a], [,b]) => b - a).slice(0, 5);
-    document.getElementById('top-5-list').innerHTML = sorted.map(([name, score], i) => `<div>${i+1}. <b>${name}</b> — ${score} pts</div>`).join('');
+    document.getElementById('top-5-list').innerHTML = sorted.map(([n, s], i) => `<div>${i+1}. ${n} (${s} pts)</div>`).join('');
 }
 
-function renderRoundTabs() {
-    const tabs = document.getElementById('rounds-tabs');
-    tabs.innerHTML = rounds.map((r, i) => `
-        <div class="round-tab ${i === activeRoundTab ? 'active' : ''}" onclick="activeRoundTab=${i}; renderRoundTabs();">
-            ${i+1}. ${r.name}
-        </div>
-    `).join('');
-    document.getElementById('current-round-title').textContent = rounds[activeRoundTab].name;
+function renderTabs() {
+    document.getElementById('rounds-tabs').innerHTML = rounds.map((r, i) => `<div class="round-tab ${i === activeRound ? 'active' : ''}" onclick="activeRound=${i}; renderTabs();">${r.name}</div>`).join('');
 }
 
 function startGame() { ws.send(JSON.stringify({ type: 'master_start_game' })); }
 function nextQuestion() { ws.send(JSON.stringify({ type: 'master_next_question' })); }
 function startRound() { ws.send(JSON.stringify({ type: 'master_start_round' })); }
-function resetGame() { if(confirm("Reset ?")) ws.send(JSON.stringify({ type: 'master_reset' })); }
 
-connect();
 </script>
 </body>
 </html>
