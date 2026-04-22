@@ -7,86 +7,83 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #05050a; --gold: #f59e0b; --accent: #7c3aed; }
-        body { background: var(--bg); color: white; font-family: 'DM Sans', sans-serif; margin: 0; overflow: hidden; text-align: center; }
-        
-        /* Animation d'étoiles en fond */
+        body { background: var(--bg); color: white; font-family: 'DM Sans', sans-serif; margin: 0; text-align: center; overflow: hidden; }
         #stars { position: fixed; width: 100%; height: 100%; z-index: -1; }
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle 2s infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-
         .screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         input { background: rgba(255,255,255,0.05); border: 2px solid var(--accent); color: white; padding: 15px; border-radius: 12px; width: 100%; max-width: 300px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
         .btn-gold { background: var(--gold); color: black; border: none; padding: 15px 40px; border-radius: 12px; font-weight: 800; cursor: pointer; font-family: 'Syne'; text-transform: uppercase; }
         .waiting-msg { font-family: 'Syne'; font-size: 1.8rem; color: var(--gold); text-transform: uppercase; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(0.95); opacity: 0.7; } 50% { transform: scale(1); opacity: 1; } }
-        .opt-btn { background: #161625; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin: 8px; width: 100%; max-width: 400px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .opt-btn:active { background: var(--accent); transform: scale(0.98); }
+        .opt-btn { background: #161625; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin: 8px; width: 100%; max-width: 400px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div id="stars"></div>
-
     <div id="setup-screen" class="screen">
-        <h1 style="font-family:'Syne'; color:var(--gold); font-size: 2.5rem; margin-bottom: 30px;">BRÛLE TON COSMOS</h1>
+        <h1 style="font-family:'Syne'; color:var(--gold); font-size: 2.2rem;">BRÛLE TON COSMOS</h1>
         <input type="text" id="player-name" placeholder="Nom du Chevalier...">
         <button class="btn-gold" onclick="joinGame()">REJOINDRE L'ARÈNE</button>
     </div>
-
     <div id="wait-screen" class="screen" style="display:none;">
         <div class="waiting-msg">Attente du Grand Pope...</div>
-        <p style="margin-top:20px; color:#64748b; font-weight: bold;">Le Sanctuaire se prépare.</p>
     </div>
-
     <div id="game-screen" class="screen" style="display:none;">
-        <h3 id="question-text" style="font-family:'Syne'; color:var(--gold); font-size: 1.5rem; margin-bottom:30px;"></h3>
+        <h3 id="question-text" style="font-family:'Syne'; color:var(--gold); margin-bottom:20px;"></h3>
         <div id="options-container" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
     </div>
 
     <script>
-        // Création des étoiles
+        // Génération étoiles
         const starContainer = document.getElementById('stars');
-        for(let i=0; i<80; i++){
+        for(let i=0; i<50; i++){
             const star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + '%';
             star.style.top = Math.random() * 100 + '%';
             star.style.width = star.style.height = Math.random() * 3 + 'px';
-            star.style.animationDelay = Math.random() * 2 + 's';
             starContainer.appendChild(star);
         }
 
         let ws;
+        let myName = "";
+
         function joinGame() {
-            const name = document.getElementById('player-name').value;
-            if(!name) return;
+            myName = document.getElementById('player-name').value;
+            if(!myName) return;
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}`);
             
             ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'join', name: name }));
+                // On envoie 'join' ET 'name' pour être sûr de couvrir tous les types de serveurs
+                ws.send(JSON.stringify({ type: 'join', name: myName, playerName: myName }));
                 document.getElementById('setup-screen').style.display = 'none';
                 document.getElementById('wait-screen').style.display = 'flex';
             };
+
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
+                // Si on reçoit une question ou une phase de jeu
                 if (data.type === 'question' || data.text) {
                     document.getElementById('wait-screen').style.display = 'none';
                     document.getElementById('game-screen').style.display = 'flex';
-                    document.getElementById('question-text').textContent = data.text;
+                    document.getElementById('question-text').textContent = data.text || data.question.text;
                     const container = document.getElementById('options-container');
                     container.innerHTML = "";
-                    const opts = data.options || [];
+                    const opts = data.options || (data.question ? data.question.options : []);
                     opts.forEach(opt => {
                         const btn = document.createElement('button');
                         btn.className = 'opt-btn'; btn.textContent = opt;
                         btn.onclick = () => {
-                            ws.send(JSON.stringify({ type: 'answer', answer: opt, playerName: name }));
-                            container.innerHTML = "<p style='color:var(--gold); font-family:Syne;'>ATTAQUE ENVOYÉE !</p>";
+                            ws.send(JSON.stringify({ type: 'answer', answer: opt, name: myName, playerName: myName }));
+                            container.innerHTML = "<p style='color:var(--gold)'>ATTAQUE ENVOYÉE !</p>";
                         };
                         container.appendChild(btn);
                     });
                 }
-                if (data.type === 'phase_change' && data.phase === 'wait') {
+                // Retour à l'attente
+                if (data.type === 'phase_change' && (data.phase === 'wait' || data.phase === 'round_intro')) {
                     document.getElementById('game-screen').style.display = 'none';
                     document.getElementById('wait-screen').style.display = 'flex';
                 }
@@ -95,9 +92,3 @@
     </script>
 </body>
 </html>
-2. Le Fichier Maître (master.html)
-Tes manches sont là, ton design est pro, et j'ai blindé le code pour voir les joueurs.
-
-HTML
-<!DOCTYPE html>
-<html lang="fr">
