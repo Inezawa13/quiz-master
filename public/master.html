@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -6,147 +7,339 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #080810; --surface: #10101a; --accent: #7c3aed; --gold: #f59e0b; }
-  body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; display:grid; grid-template-columns: 300px 1fr; height:100vh; overflow: hidden; }
-  
-  .sidebar { background:var(--surface); border-right:2px solid var(--accent); padding:20px; display:flex; flex-direction:column; gap:20px; }
-  .main { padding:25px; overflow-y:auto; }
-  
-  .panel { background:#161625; border-radius:12px; padding:15px; border:1px solid #333; }
-  .btn { padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-family:'Syne'; color:white; transition: 0.2s; }
-  .btn:hover { transform: translateY(-2px); opacity: 0.9; }
-  .btn-primary { background:var(--accent); }
-  .btn-gold { background:var(--gold); color:black; }
-  
-  .round-tab { padding:12px; border-radius:8px; border:1px solid #333; margin-bottom:8px; cursor:pointer; font-size:0.85rem; text-align:center; font-weight: bold; }
-  .round-tab.active { border: 2px solid var(--gold); color:var(--gold); background:rgba(245,158,11,0.1); }
-  
-  .player-tag { display:block; padding:10px; background:#05050a; border-radius:8px; margin-bottom:8px; color:var(--gold); font-size:0.9rem; border-left:4px solid var(--gold); font-weight: bold; }
-  input { width:100%; padding:12px; margin-bottom:10px; background:#05050a; border:1px solid #333; color:white; border-radius:8px; }
+  body { background:var(--bg); color:white; font-family:'DM Sans',sans-serif; margin:0; }
+
+/* AUTH SCREEN */
+#auth-screen {
+display:flex; flex-direction:column; align-items:center; justify-content:center;
+height:100vh; gap:16px;
+}
+#auth-screen h1 { font-family:‘Syne’; color:var(–gold); font-size:2rem; }
+#auth-screen input { padding:12px 16px; border-radius:8px; border:1px solid #444; background:#1a1a2e; color:white; font-size:1rem; width:280px; }
+#auth-screen button { padding:12px 32px; border-radius:8px; background:var(–accent); border:none; color:white; font-family:‘Syne’; font-size:1rem; cursor:pointer; }
+#auth-error { color:#ef4444; font-size:0.9rem; display:none; }
+
+/* MAIN PANEL */
+#main-panel { display:none; grid-template-columns: 300px 1fr; height:100vh; overflow:hidden; }
+.sidebar { background:var(–surface); border-right:2px solid var(–accent); padding:20px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; }
+.main { padding:25px; overflow-y:auto; }
+
+.panel { background:#161625; border-radius:12px; padding:15px; border:1px solid #333; }
+.btn { padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-family:‘Syne’; color:white; transition:0.2s; }
+.btn:hover { transform:translateY(-2px); opacity:0.9; }
+.btn-primary { background:var(–accent); }
+.btn-gold { background:var(–gold); color:black; }
+.btn-blue { background:#3b82f6; }
+.btn-red { background:#ef4444; }
+
+.round-tab { padding:12px; border-radius:8px; border:1px solid #333; cursor:pointer; font-size:0.85rem; text-align:center; font-weight:bold; transition:0.2s; }
+.round-tab.active { border:2px solid var(–gold); color:var(–gold); background:rgba(245,158,11,0.1); }
+.player-tag { display:block; padding:10px; background:#05050a; border-radius:8px; margin-bottom:8px; color:var(–gold); font-size:0.9rem; border-left:4px solid var(–gold); font-weight:bold; }
+
+input[type=“text”] { width:100%; padding:12px; margin-bottom:10px; background:#05050a; border:1px solid #333; color:white; border-radius:8px; box-sizing:border-box; }
+
+.status-bar { padding:8px 12px; border-radius:8px; font-size:0.85rem; font-weight:bold; text-align:center; }
+.status-waiting { background:rgba(59,130,246,0.2); border:1px solid #3b82f6; color:#3b82f6; }
+.status-playing { background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; }
+
+.q-history-item { background:#1a1a2e; padding:12px; border-radius:8px; margin-bottom:8px; border-left:3px solid var(–gold); font-size:0.9rem; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.answer-counter { font-size:2rem; font-family:‘Syne’; color:var(–gold); text-align:center; padding:10px; }
+.answer-bar { height:8px; border-radius:4px; background:#333; margin-top:8px; overflow:hidden; }
+.answer-bar-fill { height:100%; background:var(–gold); border-radius:4px; transition:width 0.4s ease; }
 </style>
+
 </head>
 <body>
 
-<div class="sidebar">
-    <h3 style="font-family:'Syne'; color:var(--gold); margin:0; text-transform: uppercase; letter-spacing: 1px;">🛡️ CHEVALIERS (<span id="count">0</span>)</h3>
-    <div id="player-list" style="flex:1; overflow-y:auto; margin-top: 15px;"></div>
-    
-    <div class="panel" style="border-color: var(--accent);">
-        <h4 style="margin:0 0 10px 0; font-size:0.8rem; text-transform: uppercase;">🏆 TOP 5 SECRET</h4>
-        <div id="scores-list" style="font-size:0.9rem; margin-bottom:15px; color: var(--gold);"></div>
-        <button class="btn btn-primary" style="width:100%; font-size:0.75rem;" onclick="updateLeaderboard()">CALCULER LE CLASSEMENT</button>
-    </div>
+<!-- AUTH SCREEN -->
+
+<div id="auth-screen">
+  <h1>🛡️ Master Panel</h1>
+  <p style="color:#64748b;">Entre le mot de passe maître</p>
+  <input type="password" id="auth-input" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')authenticate()">
+  <button onclick="authenticate()">Accéder</button>
+  <span id="auth-error">❌ Mot de passe incorrect</span>
 </div>
 
-<div class="main">
-    <div style="display:flex; gap:15px; margin-bottom:30px;">
-        <button class="btn btn-primary" style="flex:1;" onclick="sendToWs('master_start_game')">🚀 LANCER LE JEU</button>
-        <button class="btn" style="background:#3b82f6; flex:1;" onclick="sendToWs('master_pause_on')">☕ PAUSE PIPI</button>
-        <button class="btn btn-gold" style="flex:1;" onclick="sendToWs('master_next_question')">⏭ QUESTION SUIVANTE</button>
+<!-- MAIN PANEL -->
+
+<div id="main-panel">
+  <div class="sidebar">
+    <h3 style="font-family:'Syne'; color:var(--gold); margin:0; text-transform:uppercase;">🛡️ CHEVALIERS (<span id="count">0</span>)</h3>
+    <div id="status-display" class="status-bar status-waiting">⏳ En attente</div>
+    <div id="player-list" style="flex:1; overflow-y:auto;"></div>
+
+```
+<div class="panel">
+  <h4 style="margin:0 0 10px 0; font-size:0.8rem; text-transform:uppercase; color:var(--gold);">📊 RÉPONSES EN COURS</h4>
+  <div class="answer-counter"><span id="answer-count">0</span> / <span id="player-total">0</span></div>
+  <div class="answer-bar"><div class="answer-bar-fill" id="answer-bar-fill" style="width:0%"></div></div>
+</div>
+
+<div class="panel" style="border-color:var(--accent);">
+  <h4 style="margin:0 0 10px 0; font-size:0.8rem; text-transform:uppercase;">🏆 CLASSEMENT</h4>
+  <div id="scores-list" style="font-size:0.9rem; color:var(--gold);"></div>
+</div>
+```
+
+  </div>
+
+  <div class="main">
+    <!-- BOUTONS PRINCIPAUX -->
+    <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+      <button class="btn btn-primary" style="flex:1;" onclick="send('master_start_game')">🚀 LANCER</button>
+      <button class="btn btn-blue" style="flex:1;" onclick="send('master_start_round')">▶️ START MANCHE</button>
+      <button class="btn btn-gold" style="flex:1;" onclick="send('master_next_question')">⏭ SUIVANTE</button>
+      <button class="btn btn-blue" style="flex:1;" onclick="send('master_show_leaderboard')">🏆 CLASSEMENT</button>
+      <button class="btn btn-red" style="flex:1;" onclick="send('master_reset')">🔄 RESET</button>
     </div>
 
-    <h3 style="font-family:'Syne'; color:var(--gold); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Choix de la Manche :</h3>
-    <div id="rounds-container" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:30px;"></div>
+```
+<!-- MANCHES -->
+<h3 style="font-family:'Syne'; color:var(--gold); font-size:0.8rem; text-transform:uppercase; margin-bottom:10px;">Manche active :</h3>
+<div id="rounds-container" style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:25px;"></div>
 
-    <div style="display:grid; grid-template-columns: 1fr 350px; gap:25px;">
-        <div>
-            <h2 id="current-round-name" style="font-family:'Syne'; color:var(--gold); font-size: 1.8rem; margin: 0 0 20px 0;"></h2>
-            <div id="questions-history" style="margin-top:20px;">
-                <p style="color: #64748b;">Questions envoyées apparaîtront ici...</p>
-            </div>
-        </div>
-        
-        <div class="panel">
-            <h3 style="font-family:'Syne'; font-size:1rem; color:var(--gold); margin-bottom: 15px;">➕ ENVOYER UNE QUESTION</h3>
-            <input type="text" id="q-txt" placeholder="Texte de la question...">
-            <input type="text" id="r1" placeholder="Bonne réponse (S'affichera en 1er)">
-            <input type="text" id="r2" placeholder="Fausse réponse 1">
-            <input type="text" id="r3" placeholder="Fausse réponse 2">
-            <input type="text" id="r4" placeholder="Fausse réponse 3">
-            <button class="btn btn-gold" style="width:100%; margin-top: 10px;" onclick="addAndSend()">ATTAQUER MAINTENANT</button>
-        </div>
+<div style="display:grid; grid-template-columns:1fr 360px; gap:25px;">
+  <!-- HISTORIQUE -->
+  <div>
+    <h2 id="current-round-name" style="font-family:'Syne'; color:var(--gold); font-size:1.5rem; margin:0 0 15px 0;">En attente...</h2>
+    <div id="questions-history">
+      <p style="color:#64748b;">Les questions envoyées apparaîtront ici...</p>
     </div>
+  </div>
+
+  <!-- FORMULAIRE QUESTION -->
+  <div class="panel">
+    <h3 style="font-family:'Syne'; font-size:1rem; color:var(--gold); margin-bottom:15px;">➕ ENVOYER UNE QUESTION</h3>
+
+    <label style="font-size:0.75rem; color:#64748b; text-transform:uppercase;">Type</label>
+    <select id="q-type" style="width:100%; padding:10px; margin-bottom:10px; background:#05050a; border:1px solid #333; color:white; border-radius:8px;">
+      <option value="qcm">QCM</option>
+      <option value="vrai_faux">Vrai / Faux</option>
+      <option value="texte">Réponse libre</option>
+    </select>
+
+    <input type="text" id="q-txt" placeholder="Texte de la question...">
+    <input type="text" id="r-correct" placeholder="✅ Bonne réponse">
+    <div id="qcm-options">
+      <input type="text" id="r2" placeholder="❌ Fausse réponse 1">
+      <input type="text" id="r3" placeholder="❌ Fausse réponse 2">
+      <input type="text" id="r4" placeholder="❌ Fausse réponse 3">
+    </div>
+    <input type="number" id="q-points" placeholder="Points (défaut: 100)" style="margin-bottom:10px;">
+
+    <button class="btn btn-gold" style="width:100%;" onclick="sendQuestion()">⚔️ ATTAQUER !</button>
+  </div>
+</div>
+```
+
+  </div>
 </div>
 
 <script>
-    let ws;
-    let activeRound = 0;
-    let players = new Set();
-    let scores = {};
-    const rounds = ["L'Éveil de Seiya", "La Fureur d'Ikki", "Le Jugement de Saga", "La Malédiction d'Hadès", "Le Cosmos d'Athéna"];
+  let ws;
+  let activeRound = 0;
+  let playerCount = 0;
+  let answerCount = 0;
+  let authenticated = false;
 
-    function connect() {
-        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws = new WebSocket(`${protocol}//${location.host}`);
-        
-        ws.onopen = () => { console.log("Connecté !"); };
+  const rounds = ["L'Éveil de Seiya","La Fureur d'Ikki","Le Jugement de Saga","La Malédiction d'Hadès","Le Cosmos d'Athéna"];
 
-        ws.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            console.log("Reçu:", data);
-            
-            // On attrape tout ce qui identifie un joueur
-            if (data.type === 'player_list') { data.players.forEach(p => players.add(p.name)); }
-            if (data.type === 'new_player' || data.type === 'join' || data.playerName) {
-                players.add(data.name || data.playerName);
-            }
-            
-            // On compte les points
-            if (data.type === 'answer_update' || data.type === 'answer') {
-                const name = data.playerName || data.name;
-                if(name) {
-                    if(!scores[name]) scores[name] = 0;
-                    scores[name] += 1;
-                }
-            }
-            updateUI();
-        };
+  // Affiche/masque options QCM selon le type
+  document.getElementById('q-type').addEventListener('change', function() {
+    document.getElementById('qcm-options').style.display = this.value === 'qcm' ? 'block' : 'none';
+  });
+
+  function authenticate() {
+    const pwd = document.getElementById('auth-input').value;
+    connect(pwd);
+  }
+
+  function connect(pwd) {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${protocol}//${location.host}`);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'master_auth', password: pwd }));
+    };
+
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      handleMessage(data);
+    };
+
+    ws.onclose = () => {
+      if (authenticated) setTimeout(() => connect(document.getElementById('auth-input').value), 2000);
+    };
+  }
+
+  function handleMessage(data) {
+    switch(data.type) {
+
+      case 'master_auth_ok':
+        authenticated = true;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'grid';
         renderTabs();
-    }
+        break;
 
-    function renderTabs() {
-        document.getElementById('rounds-container').innerHTML = rounds.map((r, i) => `
-            <div class="round-tab ${i === activeRound ? 'active' : ''}" onclick="activeRound=${i}; renderTabs();">${r}</div>
-        `).join('');
-        document.getElementById('current-round-name').textContent = rounds[activeRound];
-    }
+      case 'master_auth_fail':
+        document.getElementById('auth-error').style.display = 'block';
+        break;
 
-    function updateUI() {
-        document.getElementById('count').textContent = players.size;
-        if(players.size > 0) {
-            document.getElementById('player-list').innerHTML = Array.from(players).map(p => `<div class="player-tag">🛡️ ${p}</div>`).join('');
+      case 'state_update':
+        if (data.leaderboard) updateLeaderboard(data.leaderboard);
+        break;
+
+      case 'players_update':
+        updatePlayers(data.players);
+        if (data.leaderboard) updateLeaderboard(data.leaderboard);
+        break;
+
+      case 'player_joined':
+        playerCount = data.count;
+        updatePlayerCount();
+        break;
+
+      case 'player_left':
+        playerCount = data.count;
+        updatePlayerCount();
+        break;
+
+      case 'answer_update':
+        answerCount = data.count;
+        playerCount = data.total;
+        document.getElementById('answer-count').textContent = answerCount;
+        document.getElementById('player-total').textContent = playerCount;
+        const pct = playerCount > 0 ? (answerCount / playerCount * 100) : 0;
+        document.getElementById('answer-bar-fill').style.width = pct + '%';
+        break;
+
+      case 'phase_change':
+        answerCount = 0;
+        document.getElementById('answer-count').textContent = '0';
+        document.getElementById('answer-bar-fill').style.width = '0%';
+        updateStatusBar(data.phase);
+        if (data.phase === 'question' && data.question) {
+          addToHistory(data.question);
+          if (data.round) {
+            document.getElementById('current-round-name').textContent = data.round.name;
+          }
         }
+        if (data.leaderboard) updateLeaderboard(data.leaderboard);
+        break;
+
+      case 'show_answer':
+        if (data.leaderboard) updateLeaderboard(data.leaderboard);
+        break;
+    }
+  }
+
+  function send(type) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type }));
+    }
+  }
+
+  function sendQuestion() {
+    const type = document.getElementById('q-type').value;
+    const text = document.getElementById('q-txt').value.trim();
+    const correct = document.getElementById('r-correct').value.trim();
+    const points = parseInt(document.getElementById('q-points').value) || 100;
+
+    if (!text || !correct) return alert("Il manque la question ou la bonne réponse !");
+
+    let choices = [];
+    if (type === 'qcm') {
+      const r2 = document.getElementById('r2').value.trim();
+      const r3 = document.getElementById('r3').value.trim();
+      const r4 = document.getElementById('r4').value.trim();
+      choices = [correct, r2, r3, r4].filter(Boolean);
+      // Mélange les choix
+      choices = choices.sort(() => Math.random() - 0.5);
+    } else if (type === 'vrai_faux') {
+      choices = ['Vrai', 'Faux'];
     }
 
-    function updateLeaderboard() {
-        const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]).slice(0,5);
-        document.getElementById('scores-list').innerHTML = sorted.map(([n,s], i) => `<div>${i+1}. <b>${n}</b> (${s} pts)</div>`).join('');
-    }
+    const question = {
+      type,
+      question: text,
+      correctAnswer: correct,
+      choices,
+      points
+    };
 
-    function addAndSend() {
-        const q = {
-            type: 'question',
-            text: document.getElementById('q-txt').value,
-            options: [document.getElementById('r1').value, document.getElementById('r2').value, document.getElementById('r3').value, document.getElementById('r4').value]
-        };
-        if(!q.text || !q.options[0]) return alert("Il manque la question !");
-        
-        ws.send(JSON.stringify(q));
-        
-        const hist = document.getElementById('questions-history');
-        if(hist.innerText.includes("apparaîtront")) hist.innerHTML = "";
-        const div = document.createElement('div');
-        div.innerHTML = `<div style="background:#222; padding:12px; border-radius:8px; margin-bottom:8px; border-left: 3px solid var(--gold);"><b>Q:</b> ${q.text}</div>`;
-        hist.prepend(div);
-        
-        // On vide les champs
-        document.getElementById('q-txt').value = "";
-        document.getElementById('r1').value = ""; document.getElementById('r2').value = "";
-        document.getElementById('r3').value = ""; document.getElementById('r4').value = "";
-    }
+    // Ajoute la question à la manche active et lance directement
+    ws.send(JSON.stringify({
+      type: 'master_set_round_questions',
+      roundIndex: activeRound,
+      questions: [question]
+    }));
 
-    function sendToWs(type) { ws.send(JSON.stringify({ type: type })); }
+    // Lance la question immédiatement
+    setTimeout(() => {
+      ws.send(JSON.stringify({ type: 'master_start_round' }));
+    }, 300);
 
-    connect();
+    addToHistory(question);
+
+    // Vide les champs
+    ['q-txt','r-correct','r2','r3','r4','q-points'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+
+  function addToHistory(q) {
+    const hist = document.getElementById('questions-history');
+    if (hist.querySelector('p')) hist.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'q-history-item';
+    div.innerHTML = `<b>Q:</b> ${q.question || q.text} <span style="color:var(--gold);float:right;">${q.points || 100} pts</span><br><small style="color:#10b981;">✅ ${q.correctAnswer || q.options?.[0] || ''}</small>`;
+    hist.prepend(div);
+  }
+
+  function renderTabs() {
+    document.getElementById('rounds-container').innerHTML = rounds.map((r, i) =>
+      `<div class="round-tab ${i === activeRound ? 'active' : ''}" onclick="activeRound=${i}; renderTabs();">${r}</div>`
+    ).join('');
+    document.getElementById('current-round-name').textContent = rounds[activeRound];
+  }
+
+  function updatePlayers(players) {
+    playerCount = players.length;
+    updatePlayerCount();
+    document.getElementById('player-total').textContent = playerCount;
+    document.getElementById('player-list').innerHTML = players.map(p =>
+      `<div class="player-tag">🛡️ ${p.name}</div>`
+    ).join('');
+  }
+
+  function updatePlayerCount() {
+    document.getElementById('count').textContent = playerCount;
+  }
+
+  function updateLeaderboard(lb) {
+    document.getElementById('scores-list').innerHTML = lb.slice(0,5).map((p,i) =>
+      `<div style="padding:4px 0;">${i+1}. <b>${p.name}</b> — ${p.score} pts</div>`
+    ).join('');
+  }
+
+  function updateStatusBar(phase) {
+    const el = document.getElementById('status-display');
+    const labels = {
+      waiting: '⏳ En attente',
+      round_intro: '🎬 Intro manche',
+      question: '❓ Question en cours',
+      leaderboard: '🏆 Classement',
+      end: '🎉 Fin de partie'
+    };
+    el.textContent = labels[phase] || phase;
+    el.className = 'status-bar ' + (phase === 'waiting' ? 'status-waiting' : 'status-playing');
+  }
 </script>
+
 </body>
 </html>
